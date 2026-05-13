@@ -129,15 +129,22 @@ export function isGoodEnough(
     // DR cluster support
     if (isDrWord) {
 
-      // Sometimes Chrome hears:
+      // Chrome sometimes hears:
       // rie → drie
       // rop → drop
-      // raad → draad
-      // ruif → druif
+      // roo → droom
+      // raa → draad/draak
+      // rui → druif
 
       if (
-        r.startsWith("r") &&
-        r.length >= 3
+        r.length >= 4 &&
+        (
+          r.startsWith("rie") ||
+          r.startsWith("rop") ||
+          r.startsWith("roo") ||
+          r.startsWith("raa") ||
+          r.startsWith("rui")
+        )
       ) {
         extraCandidates.push("d" + r);
       }
