@@ -20,6 +20,7 @@ interface SpeechResultEvent {
 }
 
 interface SpeechResultList {
+  isFinal?: boolean;
   length: number;
   [index: number]: { transcript: string };
 }
@@ -129,13 +130,6 @@ export function isGoodEnough(
     // DR cluster support
     if (isDrWord) {
 
-      // Chrome sometimes hears:
-      // rie → drie
-      // rop → drop
-      // roo → droom
-      // raa → draad/draak
-      // rui → druif
-
       if (
         r.length >= 4 &&
         (
@@ -149,20 +143,12 @@ export function isGoodEnough(
         extraCandidates.push("d" + r);
       }
 
-      // Sometimes:
-      // die → drie
-      // djie → drie
-
       if (
         r.startsWith("die") ||
         r.startsWith("djie")
       ) {
         extraCandidates.push("drie");
       }
-
-      // Sometimes:
-      // tree → drie
-      // free → drie
 
       if (
         r === "tree" ||
@@ -294,8 +280,15 @@ export function useRecognition() {
       recRef.current = rec;
 
       rec.lang = "nl-NL";
-      rec.continuous = false;
+
+      // IMPORTANT:
+      // Better cluster recognition
+      rec.continuous = true;
+
+      // Allow ongoing speech refinement
       rec.interimResults = true;
+
+      // More alternatives helps with children
       rec.maxAlternatives = 10;
 
       rec.onstart = () => {
@@ -308,12 +301,6 @@ export function useRecognition() {
       rec.onresult = (
         e: SpeechResultEvent
       ) => {
-
-        resultFired = true;
-
-        listeningRef.current = false;
-
-        setListening(false);
 
         const transcripts: string[] = [];
 
@@ -338,18 +325,61 @@ export function useRecognition() {
           }
         }
 
-        const best =
-          transcripts[0] ?? "";
+        // Pick BEST transcript instead of first
+        let bestTranscript = "";
 
-        const matched =
-          transcripts.some((t) =>
+        for (const t of transcripts) {
+
+          if (
             isGoodEnough(
               t,
               targetWord
             )
-          );
+          ) {
 
-        onResult(matched, best);
+            bestTranscript = t;
+
+            resultFired = true;
+
+            listeningRef.current = false;
+
+            setListening(false);
+
+            rec.stop();
+
+            onResult(true, t);
+
+            return;
+          }
+
+          // fallback candidate
+          if (
+            t.length >
+            bestTranscript.length
+          ) {
+            bestTranscript = t;
+          }
+        }
+
+        // Only fail on FINAL result
+        const lastResult =
+          e.results[e.results.length - 1];
+
+        if (
+          lastResult?.isFinal
+        ) {
+
+          resultFired = true;
+
+          listeningRef.current = false;
+
+          setListening(false);
+
+          onResult(
+            false,
+            bestTranscript
+          );
+        }
       };
 
       rec.onerror = () => {
