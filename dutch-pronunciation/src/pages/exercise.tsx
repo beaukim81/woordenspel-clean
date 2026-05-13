@@ -91,10 +91,14 @@ export default function Exercise() {
   const { speak, speaking }                               = useSpeech();
   const { listen, cancel: cancelListening, listening,
           supported: recognitionSupported }               = useRecognition();
-  const lockRef              = useRef(false);
-  const listenAfterSpeakRef  = useRef(false);
-  const listenTargetRef      = useRef("");
-  const prevSpeakingRef      = useRef(false);
+const lockRef              = useRef(false);
+const listenAfterSpeakRef  = useRef(false);
+const listenTargetRef      = useRef("");
+const prevSpeakingRef      = useRef(false);
+
+const noMatchTimeoutRef    = useRef<number | null>(null);
+
+
 
   useEffect(() => () => { lockRef.current = false; }, []);
 
@@ -139,15 +143,40 @@ export default function Exercise() {
       listenAfterSpeakRef.current = false;
       const target = listenTargetRef.current;
       if (target && recognitionSupported) {
-        listen((matched) => {
-          if (matched) {
-            triggerSuccess();
-          } else if (!lockRef.current) {
-            recordWordError(target);
-            setNoMatch(true);
-            setTimeout(() => setNoMatch(false), 2000);
-          }
-        }, target);
+listen((matched) => {
+
+  // stop oude foutmeldingen
+  if (noMatchTimeoutRef.current) {
+    clearTimeout(noMatchTimeoutRef.current);
+    noMatchTimeoutRef.current = null;
+  }
+
+  if (matched) {
+
+    setNoMatch(false);
+
+    triggerSuccess();
+
+  } else if (!lockRef.current) {
+
+    // wacht even voordat foutmelding verschijnt
+    // zodat late speech recognition nog kan slagen
+    noMatchTimeoutRef.current = window.setTimeout(() => {
+
+      if (lockRef.current) return;
+
+      recordWordError(target);
+
+      setNoMatch(true);
+
+      window.setTimeout(() => {
+        setNoMatch(false);
+      }, 2000);
+
+    }, 700);
+  }
+
+}, target);
       }
     }
   }, [speaking]); // eslint-disable-line
