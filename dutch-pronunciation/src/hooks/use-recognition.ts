@@ -328,6 +328,9 @@ export function useRecognition() {
         // Pick BEST transcript instead of first
         let bestTranscript = "";
 
+console.log("TARGET:", targetWord);
+console.log("TRANSCRIPTS:", transcripts);
+
         for (const t of transcripts) {
 
           if (
