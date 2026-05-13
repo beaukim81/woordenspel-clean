@@ -24,7 +24,7 @@ interface SpeechResultList {
   [index: number]: { transcript: string };
 }
 
-// ── Levenshtein distance (single-row, space-optimised) ─────────────
+// ── Levenshtein distance ────────────────────────────────────────────
 function levenshtein(a: string, b: string): number {
   const m = a.length;
   const n = b.length;
@@ -67,13 +67,11 @@ function normalize(s: string): string {
     .replace(/[^a-z]/g, "");
 }
 
-/**
- * Lenient match for children's Dutch speech.
- */
 export function isGoodEnough(
   recognized: string,
   target: string
 ): boolean {
+
   const t = normalize(target);
 
   if (!t) return false;
@@ -93,27 +91,36 @@ export function isGoodEnough(
   const isDrWord = t.startsWith("dr");
 
   const isClusterWord =
-    isStWord || isTwWord || isDrWord;
+    isStWord ||
+    isTwWord ||
+    isDrWord;
 
-  // Build extended candidate list
   const extraCandidates: string[] = [];
 
   for (const r of candidates) {
+
     if (!r) continue;
 
-    // Strip leading vowel
+    // Remove accidental leading vowel
     if (/^[eaio]/.test(r)) {
       extraCandidates.push(r.slice(1));
     }
 
-    // Collapse repeated leading consonants
-    if (isStWord && /^ss+/.test(r)) {
+    // ST cluster
+    if (
+      isStWord &&
+      /^ss+/.test(r)
+    ) {
       extraCandidates.push(
         r.replace(/^s+/, "s")
       );
     }
 
-    if (isTwWord && /^tt+/.test(r)) {
+    // TW cluster
+    if (
+      isTwWord &&
+      /^tt+/.test(r)
+    ) {
       extraCandidates.push(
         r.replace(/^t+/, "t")
       );
@@ -122,103 +129,93 @@ export function isGoodEnough(
     // DR cluster support
     if (isDrWord) {
 
-      // drie
+      // Sometimes Chrome hears:
+      // rie → drie
+      // rop → drop
+      // raad → draad
+      // ruif → druif
+
       if (
-        r.startsWith("rie") ||
+        r.startsWith("r") &&
+        r.length >= 3
+      ) {
+        extraCandidates.push("d" + r);
+      }
+
+      // Sometimes:
+      // die → drie
+      // djie → drie
+
+      if (
         r.startsWith("die") ||
-        r.startsWith("diee") ||
-        r.startsWith("tree") ||
-        r.startsWith("free")
+        r.startsWith("djie")
       ) {
         extraCandidates.push("drie");
       }
 
-      // drop
-      if (
-        r.startsWith("rop") ||
-        r.startsWith("dop")
-      ) {
-        extraCandidates.push("drop");
-      }
+      // Sometimes:
+      // tree → drie
+      // free → drie
 
-      // draak
       if (
-        r.startsWith("raak") ||
-        r.startsWith("raakh")
+        r === "tree" ||
+        r === "free"
       ) {
-        extraCandidates.push("draak");
-      }
-
-      // droom
-      if (
-        r.startsWith("room") ||
-        r.startsWith("doom")
-      ) {
-        extraCandidates.push("droom");
+        extraCandidates.push("drie");
       }
     }
   }
-
-  // No extraTargets: the leading cluster
-  // must still be present in what the child says.
-  const extraTargets: string[] = [];
 
   const allCandidates = [
     ...candidates,
     ...extraCandidates,
   ];
 
-  const allTargets = [
-    t,
-    ...extraTargets,
-  ];
-
-  // Allow one extra edit distance
-  // for cluster words
   const clusterBonus =
     isClusterWord ? 1 : 0;
 
-  for (const tgt of allTargets) {
-    for (const r of allCandidates) {
-      if (!r) continue;
+  for (const r of allCandidates) {
 
-      // Exact match
-      if (r === tgt) return true;
+    if (!r) continue;
 
-      // Partial match
-      if (
-        r.includes(tgt) ||
-        tgt.includes(r)
-      ) {
-        return true;
-      }
+    // Exact
+    if (r === t) {
+      return true;
+    }
 
-      // Prefix match
-      const prefix = tgt.slice(
-        0,
-        Math.max(
-          2,
-          Math.floor(tgt.length * 0.72)
-        )
-      );
+    // Contains
+    if (
+      r.includes(t) ||
+      t.includes(r)
+    ) {
+      return true;
+    }
 
-      if (
-        tgt.length >= 4 &&
-        r.startsWith(prefix)
-      ) {
-        return true;
-      }
+    // Prefix
+    const prefix = t.slice(
+      0,
+      Math.max(
+        2,
+        Math.floor(t.length * 0.72)
+      )
+    );
 
-      // Levenshtein tolerance
-      const maxDist =
-        (tgt.length >= 6 ? 2 : 1) +
-        clusterBonus;
+    if (
+      t.length >= 4 &&
+      r.startsWith(prefix)
+    ) {
+      return true;
+    }
 
-      if (
-        levenshtein(r, tgt) <= maxDist
-      ) {
-        return true;
-      }
+    // Levenshtein
+    const maxDist =
+      (t.length >= 6 ? 2 : 1) +
+      clusterBonus;
+
+    if (
+      levenshtein(r, t) <= maxDist
+    ) {
+      return true;
     }
   }
 
@@ -229,6 +226,7 @@ export function isGoodEnough(
 function getSpeechRecognitionClass():
   | (new () => SpeechRec)
   | null {
+
   if (typeof window === "undefined") {
     return null;
   }
@@ -253,6 +251,7 @@ type OnResult = (
 
 // ── Hook ───────────────────────────────────────────────────────────
 export function useRecognition() {
+
   const [listening, setListening] =
     useState(false);
 
@@ -265,12 +264,12 @@ export function useRecognition() {
   const supported =
     !!getSpeechRecognitionClass();
 
-  /** Start listening for `targetWord` */
   const listen = useCallback(
     (
       onResult: OnResult,
       targetWord: string
     ) => {
+
       const SR =
         getSpeechRecognitionClass();
 
@@ -302,6 +301,7 @@ export function useRecognition() {
       rec.onresult = (
         e: SpeechResultEvent
       ) => {
+
         resultFired = true;
 
         listeningRef.current = false;
@@ -315,6 +315,7 @@ export function useRecognition() {
           ri < e.results.length;
           ri++
         ) {
+
           const result =
             e.results[ri];
 
@@ -323,6 +324,7 @@ export function useRecognition() {
             ai < result.length;
             ai++
           ) {
+
             transcripts.push(
               result[ai].transcript
             );
@@ -344,6 +346,7 @@ export function useRecognition() {
       };
 
       rec.onerror = () => {
+
         resultFired = true;
 
         listeningRef.current = false;
@@ -354,13 +357,15 @@ export function useRecognition() {
       };
 
       rec.onend = () => {
+
         listeningRef.current = false;
 
         setListening(false);
 
-        // If recognition ended without result
         if (!resultFired) {
+
           resultFired = true;
+
           onResult(false, "");
         }
       };
@@ -368,7 +373,9 @@ export function useRecognition() {
       try {
         rec.start();
       } catch {
+
         listeningRef.current = false;
+
         setListening(false);
       }
     },
@@ -376,11 +383,13 @@ export function useRecognition() {
   );
 
   const cancel = useCallback(() => {
+
     recRef.current?.abort();
 
     listeningRef.current = false;
 
     setListening(false);
+
   }, []);
 
   return {
