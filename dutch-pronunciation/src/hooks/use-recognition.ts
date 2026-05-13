@@ -295,8 +295,8 @@ export function useRecognition() {
 
       rec.lang = "nl-NL";
       rec.continuous = false;
-      rec.interimResults = false;
-      rec.maxAlternatives = 6;
+      rec.interimResults = true;
+      rec.maxAlternatives = 10;
 
       rec.onstart = () => {
         listeningRef.current = true;
