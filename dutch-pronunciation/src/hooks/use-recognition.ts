@@ -101,7 +101,7 @@ export function isGoodEnough(
   for (const r of candidates) {
     if (!r) continue;
 
-    // Strip a leading vowel
+    // Strip leading vowel
     if (/^[eaio]/.test(r)) {
       extraCandidates.push(r.slice(1));
     }
@@ -120,20 +120,42 @@ export function isGoodEnough(
     }
 
     // DR cluster support
-    if (isDrWord && r.startsWith("rie")) {
-      extraCandidates.push("d" + r);
-    }
+    if (isDrWord) {
 
-    if (isDrWord && r.startsWith("rop")) {
-      extraCandidates.push("d" + r);
-    }
+      // drie
+      if (
+        r.startsWith("rie") ||
+        r.startsWith("die") ||
+        r.startsWith("diee") ||
+        r.startsWith("tree") ||
+        r.startsWith("free")
+      ) {
+        extraCandidates.push("drie");
+      }
 
-    if (isDrWord && r.startsWith("raak")) {
-      extraCandidates.push("d" + r);
-    }
+      // drop
+      if (
+        r.startsWith("rop") ||
+        r.startsWith("dop")
+      ) {
+        extraCandidates.push("drop");
+      }
 
-    if (isDrWord && r.startsWith("room")) {
-      extraCandidates.push("d" + r);
+      // draak
+      if (
+        r.startsWith("raak") ||
+        r.startsWith("raakh")
+      ) {
+        extraCandidates.push("draak");
+      }
+
+      // droom
+      if (
+        r.startsWith("room") ||
+        r.startsWith("doom")
+      ) {
+        extraCandidates.push("droom");
+      }
     }
   }
 
