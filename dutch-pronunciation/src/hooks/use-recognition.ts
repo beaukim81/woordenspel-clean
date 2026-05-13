@@ -129,6 +129,42 @@ export function isGoodEnough(
 
     // DR cluster support
     if (isDrWord) {
+      // Browser slikt soms de D in bij DR woorden
+      if (
+        r.startsWith("r") &&
+        r.length >= 2
+      ) {
+        extraCandidates.push("d" + r);
+      }
+
+      // Soms wordt alleen de klinker gehoord
+      if (
+        r === "de" ||
+        r === "dee" ||
+        r === "die"
+      ) {
+        extraCandidates.push("drie");
+      }
+
+      if (
+        r === "rum"
+      ) {
+        extraCandidates.push("drum");
+      }
+
+      if (
+        r === "rank"
+      ) {
+        extraCandidates.push("drank");
+      }
+
+      if (
+        r === "raai" ||
+        r === "raaien" ||
+        r === "naaien"
+      ) {
+        extraCandidates.push("draaien");
+      }
 
       if (
         r.length >= 4 &&
