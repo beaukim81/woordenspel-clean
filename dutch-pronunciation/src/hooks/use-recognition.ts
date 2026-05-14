@@ -86,8 +86,7 @@ function normalize(
     )
     .replace(
       /[^a-z0-9]/g,
-      ""
-    );
+      "");
 }
 
 // ── Matching logic ─────────────────────────────────────────────────
@@ -171,6 +170,8 @@ export function isGoodEnough(
           "rohm",
           "rome",
           "home",
+          "droem",
+          "droam",
         ].includes(r)
       ) {
         extraCandidates.push(
@@ -206,13 +207,13 @@ export function isGoodEnough(
           "raak",
           "raaq",
           "raac",
-          "raakh",
-          "raack",
+          "rakh",
+          "raaak",
           "raek",
-          "raeck",
-          "draken",
+          "raack",
           "draek",
           "draeck",
+          "draken",
         ].includes(r)
       ) {
         extraCandidates.push(
@@ -275,12 +276,7 @@ export function isGoodEnough(
           "dee",
           "die",
           "djie",
-          "drum",
-          "dram",
-          "dramm",
-          "drumm",
-          "druc",
-          "druse",
+          "drie",
         ].includes(r)
       ) {
         extraCandidates.push(
@@ -335,45 +331,61 @@ export function isGoodEnough(
     ...extraCandidates,
   ];
 
-  // ── Duplicate cleanup ───────────────────────────────
-  const cleanedCandidates =
-    allCandidates.map((c) => {
-
-      const words =
-        c.split(" ");
-
-      if (
-        words.length >= 2 &&
-        words.every(
-          (w) => w === words[0]
-        )
-      ) {
-        return words[0];
-      }
-
-      return c;
-    });
-
-  for (const r of cleanedCandidates) {
+  for (const r of allCandidates) {
 
     if (!r) continue;
 
-    // exact
+    // ── Exact ─────────────────────────────────────────
     if (r === t) {
       return true;
     }
 
-    // korte woorden
+    // ── Speciale korte DR woorden ────────────────────
     if (
-      t.length <= 5 &&
-      r.startsWith(
-        t.slice(0, 3)
+      t === "drie" &&
+      (
+        r === "3" ||
+        r === "drie" ||
+        r === "rie" ||
+        r.startsWith("dri")
       )
     ) {
       return true;
     }
 
-    // contains
+    if (
+      t === "drum" &&
+      (
+        r === "drum" ||
+        r === "rum" ||
+        r.startsWith("dru")
+      )
+    ) {
+      return true;
+    }
+
+    if (
+      t === "draad" &&
+      (
+        r === "raad" ||
+        r === "draad" ||
+        r.startsWith("dra")
+      )
+    ) {
+      return true;
+    }
+
+    if (
+      t === "draak" &&
+      (
+        r === "raak" ||
+        r.startsWith("dra")
+      )
+    ) {
+      return true;
+    }
+
+    // ── Contains ─────────────────────────────────────
     if (
       r.length >= 4 &&
       (
@@ -384,7 +396,7 @@ export function isGoodEnough(
       return true;
     }
 
-    // prefix
+    // ── Prefix ───────────────────────────────────────
     const prefix = t.slice(
       0,
       Math.max(
@@ -402,11 +414,17 @@ export function isGoodEnough(
       return true;
     }
 
-    // fuzzy
-    const maxDist =
-      t.length >= 6
-        ? 2
-        : 1;
+    // ── Fuzzy ────────────────────────────────────────
+    let maxDist = 1;
+
+    if (t.length >= 6) {
+      maxDist = 2;
+    }
+
+    // DR woorden moeilijker
+    if (t.startsWith("dr")) {
+      maxDist += 1;
+    }
 
     if (
       levenshtein(r, t) <=
@@ -491,14 +509,14 @@ export function useRecognition() {
 
       rec.lang = "nl-NL";
 
-      // ÉÉN woord per beurt
+      // Eén woord per beurt
       rec.continuous = false;
 
       // Geen halve woorden
       rec.interimResults = false;
 
-      // Minder spam
-      rec.maxAlternatives = 5;
+      // Meerdere alternatieven
+      rec.maxAlternatives = 8;
 
       rec.onstart = () => {
 
@@ -517,7 +535,6 @@ export function useRecognition() {
         const transcripts =
           new Set<string>();
 
-        // Alleen laatste resultaat
         const lastResult =
           e.results[
             e.results.length - 1
