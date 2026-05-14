@@ -450,7 +450,7 @@ listen((matched) => {
               {encourage}
             </motion.div>
           )}
-          {!encourage && noMatch && (
+         {!encourage && noMatch && !listening && (
             <motion.div key="nomatch"
               initial={{ opacity:0, y:6 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }}
               className="font-black text-base text-orange-400" aria-live="polite"
