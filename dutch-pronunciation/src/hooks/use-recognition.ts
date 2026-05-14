@@ -348,7 +348,7 @@ export function useRecognition() {
 
       // IMPORTANT:
       // Better cluster recognition
-      rec.continuous = true;
+      rec.continuous = false;
 
       // Allow ongoing speech refinement
       rec.interimResults = true;
