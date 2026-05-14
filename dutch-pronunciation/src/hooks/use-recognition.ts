@@ -401,7 +401,7 @@ export function useRecognition() {
       rec.lang = "nl-NL";
 
       // stabieler
-      rec.continuous = true;
+      rec.continuous = false;
 
       // GEEN halve woorden meer
       rec.interimResults = false;
