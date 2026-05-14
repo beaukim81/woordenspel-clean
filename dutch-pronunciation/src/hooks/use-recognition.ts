@@ -73,6 +73,7 @@ function normalize(s: string): string {
     .replace(/[^a-z0-9]/g, "");
 }
 
+// ── Matching ───────────────────────────────────────────────────────
 export function isGoodEnough(
   recognized: string,
   target: string
@@ -112,7 +113,7 @@ export function isGoodEnough(
       extraCandidates.push(r.slice(1));
     }
 
-    // ── ST cluster support ──────────────────────────────
+    // ── ST cluster ──────────────────────────────────────
     if (
       isStWord &&
       /^ss+/.test(r)
@@ -122,7 +123,7 @@ export function isGoodEnough(
       );
     }
 
-    // ── TW cluster support ──────────────────────────────
+    // ── TW cluster ──────────────────────────────────────
     if (
       isTwWord &&
       /^tt+/.test(r)
@@ -132,10 +133,10 @@ export function isGoodEnough(
       );
     }
 
-    // ── DR cluster support ──────────────────────────────
+    // ── DR cluster ──────────────────────────────────────
     if (isDrWord) {
 
-      // Browser slikt vaak de D in
+      // Browser slikt soms de D in
       if (
         r.startsWith("r") &&
         r.length >= 2
@@ -147,7 +148,8 @@ export function isGoodEnough(
       if (
         r === "room" ||
         r === "rhoon" ||
-        r === "ram"
+        r === "ram" ||
+        r === "dro"
       ) {
         extraCandidates.push("droom");
       }
@@ -161,7 +163,8 @@ export function isGoodEnough(
         r === "ruig" ||
         r === "druyf" ||
         r === "druijf" ||
-        r === "druijff"
+        r === "druijff" ||
+        r === "ru"
       ) {
         extraCandidates.push("druif");
       }
@@ -263,7 +266,6 @@ export function isGoodEnough(
 
     const words = c.split(" ");
 
-    // drie drie -> drie
     if (
       words.length >= 2 &&
       words.every(w => w === words[0])
@@ -297,7 +299,7 @@ export function isGoodEnough(
       return true;
     }
 
-    // ── Prefix matching ────────────────────────────────
+    // ── Prefix ─────────────────────────────────────────
     const prefix = t.slice(
       0,
       Math.max(
@@ -313,7 +315,7 @@ export function isGoodEnough(
       return true;
     }
 
-    // ── Levenshtein fuzzy matching ─────────────────────
+    // ── Levenshtein ────────────────────────────────────
     const maxDist =
       (t.length >= 6 ? 2 : 1) +
       clusterBonus;
@@ -370,6 +372,9 @@ export function useRecognition() {
   const supported =
     !!getSpeechRecognitionClass();
 
+  const restartCountRef =
+    useRef(0);
+
   const listen = useCallback(
     (
       onResult: OnResult,
@@ -394,14 +399,14 @@ export function useRecognition() {
 
       rec.lang = "nl-NL";
 
-      // Beter voor kinderen
+      // ── BIG IMPROVEMENTS ─────────────────────────────
       rec.continuous = true;
 
-      // Laat browser blijven verfijnen
-      rec.interimResults = true;
+      // FALSE = stabielere volledige woorden
+      rec.interimResults = false;
 
-      // Meer alternatieven
-      rec.maxAlternatives = 10;
+      // Meer alternatieven helpt enorm
+      rec.maxAlternatives = 15;
 
       rec.onstart = () => {
 
@@ -438,7 +443,6 @@ export function useRecognition() {
                 .transcript
                 .trim();
 
-            // GEEN minimum lengte
             if (
               cleaned.length > 0
             ) {
@@ -469,6 +473,8 @@ export function useRecognition() {
 
             setListening(false);
 
+            restartCountRef.current = 0;
+
             rec.stop();
 
             onResult(true, t);
@@ -484,15 +490,15 @@ export function useRecognition() {
           }
         }
 
-        // Alleen failen na FINAL result
         const lastResult =
           e.results[e.results.length - 1];
 
+        // Alleen failen als FINAL én transcript bestaat
         if (
-          lastResult?.isFinal
+          lastResult?.isFinal &&
+          transcripts.length > 0
         ) {
 
-          // Wacht nog even op late alternatieven
           setTimeout(() => {
 
             if (resultFired) return;
@@ -503,12 +509,14 @@ export function useRecognition() {
 
             setListening(false);
 
+            restartCountRef.current = 0;
+
             onResult(
               false,
               bestTranscript
             );
 
-          }, 650);
+          }, 900);
         }
       };
 
@@ -520,28 +528,62 @@ export function useRecognition() {
 
         setListening(false);
 
+        restartCountRef.current = 0;
+
         onResult(false, "");
       };
 
       rec.onend = () => {
 
-        listeningRef.current = false;
+        // Als al succesvol -> stoppen
+        if (resultFired) {
 
-        setListening(false);
+          listeningRef.current = false;
 
-        if (!resultFired) {
+          setListening(false);
 
-          // kleine delay voor late transcripts
-          setTimeout(() => {
+          restartCountRef.current = 0;
 
-            if (resultFired) return;
+          return;
+        }
 
-            resultFired = true;
+        // Max 4 auto restarts
+        if (
+          restartCountRef.current >= 4
+        ) {
+
+          listeningRef.current = false;
+
+          setListening(false);
+
+          restartCountRef.current = 0;
+
+          onResult(false, "");
+
+          return;
+        }
+
+        restartCountRef.current += 1;
+
+        // Auto restart voorkomt halve woorden
+        setTimeout(() => {
+
+          try {
+
+            rec.start();
+
+          } catch {
+
+            listeningRef.current = false;
+
+            setListening(false);
+
+            restartCountRef.current = 0;
 
             onResult(false, "");
+          }
 
-          }, 450);
-        }
+        }, 150);
       };
 
       try {
@@ -553,12 +595,32 @@ export function useRecognition() {
         listeningRef.current = false;
 
         setListening(false);
+
+        restartCountRef.current = 0;
       }
     },
     []
   );
 
   const cancel = useCallback(() => {
+
+    recRef.current?.abort();
+
+    listeningRef.current = false;
+
+    setListening(false);
+
+    restartCountRef.current = 0;
+
+  }, []);
+
+  return {
+    listen,
+    cancel,
+    listening,
+    supported,
+  };
+}
 
     recRef.current?.abort();
 
