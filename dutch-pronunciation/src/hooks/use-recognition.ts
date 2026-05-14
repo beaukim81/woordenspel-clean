@@ -1,15 +1,17 @@
 import { useCallback, useRef, useState } from "react";
 
-// ── Minimal local types — avoids relying on lib.dom SpeechRecognition ──
+// ── Minimal local types ────────────────────────────────────────────
 interface SpeechRec {
   lang: string;
   continuous: boolean;
   interimResults: boolean;
   maxAlternatives: number;
+
   onstart: (() => void) | null;
   onresult: ((e: SpeechResultEvent) => void) | null;
   onerror: (() => void) | null;
   onend: (() => void) | null;
+
   start(): void;
   abort(): void;
   stop(): void;
@@ -22,10 +24,12 @@ interface SpeechResultEvent {
 interface SpeechResultList {
   isFinal?: boolean;
   length: number;
-  [index: number]: { transcript: string };
+  [index: number]: {
+    transcript: string;
+  };
 }
 
-// ── Levenshtein distance ────────────────────────────────────────────
+// ── Levenshtein ────────────────────────────────────────────────────
 function levenshtein(a: string, b: string): number {
 
   const m = a.length;
@@ -63,6 +67,7 @@ function levenshtein(a: string, b: string): number {
   return row[n];
 }
 
+// ── Normalize ──────────────────────────────────────────────────────
 function normalize(s: string): string {
 
   return s
@@ -73,7 +78,7 @@ function normalize(s: string): string {
     .replace(/[^a-z0-9]/g, "");
 }
 
-// ── Matching ───────────────────────────────────────────────────────
+// ── Matching logic ─────────────────────────────────────────────────
 export function isGoodEnough(
   recognized: string,
   target: string
@@ -81,7 +86,9 @@ export function isGoodEnough(
 
   const t = normalize(target);
 
-  if (!t) return false;
+  if (!t) {
+    return false;
+  }
 
   const parts = recognized
     .split(/\s+/)
@@ -93,27 +100,17 @@ export function isGoodEnough(
     ...parts,
   ];
 
+  const extraCandidates: string[] = [];
+
+  const isDrWord = t.startsWith("dr");
   const isStWord = t.startsWith("st");
   const isTwWord = t.startsWith("tw");
-  const isDrWord = t.startsWith("dr");
-
-  const isClusterWord =
-    isStWord ||
-    isTwWord ||
-    isDrWord;
-
-  const extraCandidates: string[] = [];
 
   for (const r of candidates) {
 
     if (!r) continue;
 
-    // ── Remove accidental leading vowel ─────────────────
-    if (/^[eaio]/.test(r)) {
-      extraCandidates.push(r.slice(1));
-    }
-
-    // ── ST cluster ──────────────────────────────────────
+    // ── ST ─────────────────────────────────────────────
     if (
       isStWord &&
       /^ss+/.test(r)
@@ -123,7 +120,7 @@ export function isGoodEnough(
       );
     }
 
-    // ── TW cluster ──────────────────────────────────────
+    // ── TW ─────────────────────────────────────────────
     if (
       isTwWord &&
       /^tt+/.test(r)
@@ -133,10 +130,10 @@ export function isGoodEnough(
       );
     }
 
-    // ── DR cluster ──────────────────────────────────────
+    // ── DR ─────────────────────────────────────────────
     if (isDrWord) {
 
-      // Browser slikt soms de D in
+      // Browser slikt D in
       if (
         r.startsWith("r") &&
         r.length >= 2
@@ -146,112 +143,118 @@ export function isGoodEnough(
 
       // droom
       if (
-        r === "room" ||
-        r === "rhoon" ||
-        r === "ram" ||
-        r === "dro"
+        [
+          "room",
+          "rhoon",
+          "ram",
+          "dro",
+        ].includes(r)
       ) {
         extraCandidates.push("droom");
       }
 
       // druif
       if (
-        r === "drive" ||
-        r === "driv" ||
-        r === "live" ||
-        r === "ruif" ||
-        r === "ruig" ||
-        r === "druyf" ||
-        r === "druijf" ||
-        r === "druijff" ||
-        r === "ru"
+        [
+          "drive",
+          "driv",
+          "live",
+          "ruif",
+          "ruig",
+          "ru",
+          "druyf",
+          "druijf",
+          "druijff",
+        ].includes(r)
       ) {
         extraCandidates.push("druif");
       }
 
-      // draad
-      if (
-        r === "raad" ||
-        r === "draat"
-      ) {
-        extraCandidates.push("draad");
-      }
-
       // draak
       if (
-        r === "raak" ||
-        r === "draken"
+        [
+          "raak",
+          "draken",
+        ].includes(r)
       ) {
         extraCandidates.push("draak");
       }
 
+      // draad
+      if (
+        [
+          "raad",
+          "draat",
+        ].includes(r)
+      ) {
+        extraCandidates.push("draad");
+      }
+
       // dragen
       if (
-        r === "vragen" ||
-        r === "rager"
+        [
+          "vragen",
+          "rager",
+        ].includes(r)
       ) {
         extraCandidates.push("dragen");
       }
 
       // drop
       if (
-        r === "rob"
+        [
+          "rob",
+        ].includes(r)
       ) {
         extraCandidates.push("drop");
       }
 
       // drie
       if (
-        r === "rie" ||
-        r === "3" ||
-        r === "tree" ||
-        r === "free" ||
-        r === "de" ||
-        r === "dee" ||
-        r === "die" ||
-        r === "djie"
+        [
+          "rie",
+          "3",
+          "tree",
+          "free",
+          "de",
+          "dee",
+          "die",
+          "djie",
+        ].includes(r)
       ) {
         extraCandidates.push("drie");
       }
 
       // drum
       if (
-        r === "rum" ||
-        r === "trump"
+        [
+          "rum",
+          "trump",
+        ].includes(r)
       ) {
         extraCandidates.push("drum");
       }
 
       // drank
       if (
-        r === "rank"
+        [
+          "rank",
+        ].includes(r)
       ) {
         extraCandidates.push("drank");
       }
 
       // draaien
       if (
-        r === "raai" ||
-        r === "raaien" ||
-        r === "naaien" ||
-        r === "ryan" ||
-        r === "brian"
+        [
+          "raai",
+          "raaien",
+          "naaien",
+          "ryan",
+          "brian",
+        ].includes(r)
       ) {
         extraCandidates.push("draaien");
-      }
-
-      // General DR repair
-      if (
-        r.length >= 3 &&
-        (
-          r.startsWith("rie") ||
-          r.startsWith("rop") ||
-          r.startsWith("roo") ||
-          r.startsWith("raa") ||
-          r.startsWith("rui")
-        )
-      ) {
-        extraCandidates.push("d" + r);
       }
     }
   }
@@ -261,14 +264,16 @@ export function isGoodEnough(
     ...extraCandidates,
   ];
 
-  // ── Clean repeated transcripts ───────────────────────
+  // ── Clean duplicates ────────────────────────────────
   const cleanedCandidates = allCandidates.map((c) => {
 
     const words = c.split(" ");
 
     if (
       words.length >= 2 &&
-      words.every(w => w === words[0])
+      words.every(
+        (w) => w === words[0]
+      )
     ) {
       return words[0];
     }
@@ -276,19 +281,16 @@ export function isGoodEnough(
     return c;
   });
 
-  const clusterBonus =
-    isClusterWord ? 1 : 0;
-
   for (const r of cleanedCandidates) {
 
     if (!r) continue;
 
-    // ── Exact ──────────────────────────────────────────
+    // exact
     if (r === t) {
       return true;
     }
 
-    // ── Contains ───────────────────────────────────────
+    // contains
     if (
       r.length >= 4 &&
       (
@@ -299,7 +301,7 @@ export function isGoodEnough(
       return true;
     }
 
-    // ── Prefix ─────────────────────────────────────────
+    // prefix
     const prefix = t.slice(
       0,
       Math.max(
@@ -315,10 +317,9 @@ export function isGoodEnough(
       return true;
     }
 
-    // ── Levenshtein ────────────────────────────────────
+    // fuzzy
     const maxDist =
-      (t.length >= 6 ? 2 : 1) +
-      clusterBonus;
+      t.length >= 6 ? 2 : 1;
 
     if (
       levenshtein(r, t) <= maxDist
@@ -357,7 +358,7 @@ type OnResult = (
   transcript: string
 ) => void;
 
-// ── Hook ───────────────────────────────────────────────
+// ── Hook ───────────────────────────────────────────────────────────
 export function useRecognition() {
 
   const [listening, setListening] =
@@ -369,11 +370,11 @@ export function useRecognition() {
   const recRef =
     useRef<SpeechRec | null>(null);
 
-  const supported =
-    !!getSpeechRecognitionClass();
-
   const restartCountRef =
     useRef(0);
+
+  const supported =
+    !!getSpeechRecognitionClass();
 
   const listen = useCallback(
     (
@@ -399,13 +400,13 @@ export function useRecognition() {
 
       rec.lang = "nl-NL";
 
-      // ── BIG IMPROVEMENTS ─────────────────────────────
+      // stabieler
       rec.continuous = true;
 
-      // FALSE = stabielere volledige woorden
+      // GEEN halve woorden meer
       rec.interimResults = false;
 
-      // Meer alternatieven helpt enorm
+      // meer alternatieven
       rec.maxAlternatives = 15;
 
       rec.onstart = () => {
@@ -451,10 +452,17 @@ export function useRecognition() {
           }
         }
 
-        let bestTranscript = "";
+        console.log(
+          "TARGET:",
+          targetWord
+        );
 
-        console.log("TARGET:", targetWord);
-        console.log("TRANSCRIPTS:", transcripts);
+        console.log(
+          "TRANSCRIPTS:",
+          transcripts
+        );
+
+        let bestTranscript = "";
 
         for (const t of transcripts) {
 
@@ -464,8 +472,6 @@ export function useRecognition() {
               targetWord
             )
           ) {
-
-            bestTranscript = t;
 
             resultFired = true;
 
@@ -493,7 +499,6 @@ export function useRecognition() {
         const lastResult =
           e.results[e.results.length - 1];
 
-        // Alleen failen als FINAL én transcript bestaat
         if (
           lastResult?.isFinal &&
           transcripts.length > 0
@@ -501,7 +506,9 @@ export function useRecognition() {
 
           setTimeout(() => {
 
-            if (resultFired) return;
+            if (resultFired) {
+              return;
+            }
 
             resultFired = true;
 
@@ -535,7 +542,6 @@ export function useRecognition() {
 
       rec.onend = () => {
 
-        // Als al succesvol -> stoppen
         if (resultFired) {
 
           listeningRef.current = false;
@@ -547,7 +553,7 @@ export function useRecognition() {
           return;
         }
 
-        // Max 4 auto restarts
+        // auto restart
         if (
           restartCountRef.current >= 4
         ) {
@@ -565,7 +571,6 @@ export function useRecognition() {
 
         restartCountRef.current += 1;
 
-        // Auto restart voorkomt halve woorden
         setTimeout(() => {
 
           try {
@@ -611,22 +616,6 @@ export function useRecognition() {
     setListening(false);
 
     restartCountRef.current = 0;
-
-  }, []);
-
-  return {
-    listen,
-    cancel,
-    listening,
-    supported,
-  };
-}
-
-    recRef.current?.abort();
-
-    listeningRef.current = false;
-
-    setListening(false);
 
   }, []);
 
