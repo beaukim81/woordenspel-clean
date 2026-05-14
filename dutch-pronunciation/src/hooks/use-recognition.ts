@@ -241,13 +241,16 @@ if (
       return true;
     }
 
-    // Contains
-    if (
-      r.includes(t) ||
-      t.includes(r)
-    ) {
-      return true;
-    }
+// Contains — alleen bij langere stukken
+if (
+  r.length >= 4 &&
+  (
+    r.includes(t) ||
+    t.includes(r)
+  )
+) {
+  return true;
+}
 
     // Prefix
     const prefix = t.slice(
