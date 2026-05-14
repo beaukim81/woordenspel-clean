@@ -181,7 +181,7 @@ if (target && recognitionSupported) {
 
     }, target);
 
-  }, 350);
+  }, 250);
 }
 }
 
