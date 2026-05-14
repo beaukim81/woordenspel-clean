@@ -136,6 +136,35 @@ export function isGoodEnough(
       ) {
         extraCandidates.push("d" + r);
       }
+if (
+  r === "raad"
+) {
+  extraCandidates.push("draad");
+}
+
+if (
+  r === "raak"
+) {
+  extraCandidates.push("draak");
+}
+
+if (
+  r === "vragen"
+) {
+  extraCandidates.push("dragen");
+}
+
+if (
+  r === "rob"
+) {
+  extraCandidates.push("drop");
+}
+
+if (
+  r === "drive"
+) {
+  extraCandidates.push("druif");
+}
 
       // Soms wordt alleen de klinker gehoord
       if (
