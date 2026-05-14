@@ -142,44 +142,50 @@ const noMatchTimeoutRef    = useRef<number | null>(null);
     if (listenAfterSpeakRef.current) {
       listenAfterSpeakRef.current = false;
       const target = listenTargetRef.current;
-      if (target && recognitionSupported) {
-listen((matched) => {
+if (target && recognitionSupported) {
 
-  // stop oude foutmeldingen
-  if (noMatchTimeoutRef.current) {
-    clearTimeout(noMatchTimeoutRef.current);
-    noMatchTimeoutRef.current = null;
-  }
+  window.setTimeout(() => {
 
-  if (matched) {
+    listen((matched) => {
 
-    setNoMatch(false);
-
-    triggerSuccess();
-
-  } else if (!lockRef.current) {
-
-    // wacht even voordat foutmelding verschijnt
-    // zodat late speech recognition nog kan slagen
-    noMatchTimeoutRef.current = window.setTimeout(() => {
-
-      if (lockRef.current) return;
-
-      recordWordError(target);
-
-      setNoMatch(true);
-
-      window.setTimeout(() => {
-        setNoMatch(false);
-      }, 2000);
-
-    }, 1600);
-  }
-
-}, target);
+      // stop oude foutmeldingen
+      if (noMatchTimeoutRef.current) {
+        clearTimeout(noMatchTimeoutRef.current);
+        noMatchTimeoutRef.current = null;
       }
-    }
-  }, [speaking]); // eslint-disable-line
+
+      if (matched) {
+
+        setNoMatch(false);
+
+        triggerSuccess();
+
+      } else if (!lockRef.current) {
+
+        // wacht even voordat foutmelding verschijnt
+        // zodat late speech recognition nog kan slagen
+        noMatchTimeoutRef.current = window.setTimeout(() => {
+
+          if (lockRef.current) return;
+
+          recordWordError(target);
+
+          setNoMatch(true);
+
+          window.setTimeout(() => {
+            setNoMatch(false);
+          }, 2000);
+
+        }, 1600);
+      }
+
+    }, target);
+
+  }, 350);
+}
+}
+
+}, [speaking]); // eslint-disable-line
 
   // Achievement toasts
   useEffect(() => {
@@ -463,7 +469,7 @@ listen((matched) => {
               initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
               className="font-bold text-sm text-purple-300/70" aria-live="polite"
             >
-              Zeg het woord na…
+              Zeg nu het woord 👂
             </motion.div>
           )}
         </AnimatePresence>
@@ -526,7 +532,7 @@ listen((matched) => {
                 <motion.div animate={{ scale:[1,1.25,1] }} transition={{ duration:0.7, repeat:Infinity }}>
                   <Mic className="w-6 h-6" />
                 </motion.div>
-                Jouw beurt!
+                Jouw beurt! 🎤
               </>
             ) : (
               <>
