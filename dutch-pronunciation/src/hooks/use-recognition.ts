@@ -27,6 +27,7 @@ interface SpeechResultList {
 
 // ── Levenshtein distance ────────────────────────────────────────────
 function levenshtein(a: string, b: string): number {
+
   const m = a.length;
   const n = b.length;
 
@@ -36,10 +37,13 @@ function levenshtein(a: string, b: string): number {
   );
 
   for (let i = 1; i <= m; i++) {
+
     let prev = row[0];
+
     row[0] = i;
 
     for (let j = 1; j <= n; j++) {
+
       const temp = row[j];
 
       row[j] =
@@ -60,6 +64,7 @@ function levenshtein(a: string, b: string): number {
 }
 
 function normalize(s: string): string {
+
   return s
     .toLowerCase()
     .trim()
@@ -107,7 +112,7 @@ export function isGoodEnough(
       extraCandidates.push(r.slice(1));
     }
 
-    // ST cluster
+    // ST cluster support
     if (
       isStWord &&
       /^ss+/.test(r)
@@ -117,7 +122,7 @@ export function isGoodEnough(
       );
     }
 
-    // TW cluster
+    // TW cluster support
     if (
       isTwWord &&
       /^tt+/.test(r)
@@ -129,44 +134,40 @@ export function isGoodEnough(
 
     // DR cluster support
     if (isDrWord) {
-      // Browser slikt soms de D in bij DR woorden
+
+      // Browser slikt vaak de D in
       if (
         r.startsWith("r") &&
-        r.length >= 2
+        r.length >= 3
       ) {
         extraCandidates.push("d" + r);
       }
-if (
-  r === "raad"
-) {
-  extraCandidates.push("draad");
-}
 
-if (
-  r === "raak"
-) {
-  extraCandidates.push("draak");
-}
+      // Common DR mistakes
+      if (r === "raad") {
+        extraCandidates.push("draad");
+      }
 
-if (
-  r === "vragen"
-) {
-  extraCandidates.push("dragen");
-}
+      if (r === "raak") {
+        extraCandidates.push("draak");
+      }
 
-if (
-  r === "rob"
-) {
-  extraCandidates.push("drop");
-}
+      if (r === "vragen") {
+        extraCandidates.push("dragen");
+      }
 
-if (
-  r === "drive"
-) {
-  extraCandidates.push("druif");
-}
+      if (r === "rob") {
+        extraCandidates.push("drop");
+      }
 
-      // Soms wordt alleen de klinker gehoord
+      if (r === "drive") {
+        extraCandidates.push("druif");
+      }
+
+      if (r === "rie") {
+        extraCandidates.push("drie");
+      }
+
       if (
         r === "de" ||
         r === "dee" ||
@@ -176,14 +177,17 @@ if (
       }
 
       if (
-        r === "rum"
+        r === "tree" ||
+        r === "free"
       ) {
+        extraCandidates.push("drie");
+      }
+
+      if (r === "rum") {
         extraCandidates.push("drum");
       }
 
-      if (
-        r === "rank"
-      ) {
+      if (r === "rank") {
         extraCandidates.push("drank");
       }
 
@@ -214,13 +218,6 @@ if (
       ) {
         extraCandidates.push("drie");
       }
-
-      if (
-        r === "tree" ||
-        r === "free"
-      ) {
-        extraCandidates.push("drie");
-      }
     }
   }
 
@@ -229,10 +226,26 @@ if (
     ...extraCandidates,
   ];
 
+  // ── Clean repeated transcripts ─────────────────────
+  const cleanedCandidates = allCandidates.map((c) => {
+
+    const words = c.split(" ");
+
+    // drie drie -> drie
+    if (
+      words.length >= 2 &&
+      words.every(w => w === words[0])
+    ) {
+      return words[0];
+    }
+
+    return c;
+  });
+
   const clusterBonus =
     isClusterWord ? 1 : 0;
 
-  for (const r of allCandidates) {
+  for (const r of cleanedCandidates) {
 
     if (!r) continue;
 
@@ -241,18 +254,18 @@ if (
       return true;
     }
 
-// Contains — alleen bij langere stukken
-if (
-  r.length >= 4 &&
-  (
-    r.includes(t) ||
-    t.includes(r)
-  )
-) {
-  return true;
-}
+    // Contains — only for longer pieces
+    if (
+      r.length >= 4 &&
+      (
+        r.includes(t) ||
+        t.includes(r)
+      )
+    ) {
+      return true;
+    }
 
-    // Prefix
+    // Prefix matching
     const prefix = t.slice(
       0,
       Math.max(
@@ -268,7 +281,7 @@ if (
       return true;
     }
 
-    // Levenshtein
+    // Levenshtein fuzzy matching
     const maxDist =
       (t.length >= 6 ? 2 : 1) +
       clusterBonus;
@@ -349,18 +362,19 @@ export function useRecognition() {
 
       rec.lang = "nl-NL";
 
-      // IMPORTANT:
-      // Better cluster recognition
+      // Better for children speaking slower
       rec.continuous = true;
 
-      // Allow ongoing speech refinement
+      // Keep refining speech
       rec.interimResults = true;
 
-      // More alternatives helps with children
+      // More alternatives = more chance to match
       rec.maxAlternatives = 10;
 
       rec.onstart = () => {
+
         listeningRef.current = true;
+
         setListening(true);
       };
 
@@ -393,11 +407,10 @@ export function useRecognition() {
           }
         }
 
-        // Pick BEST transcript instead of first
         let bestTranscript = "";
 
-console.log("TARGET:", targetWord);
-console.log("TRANSCRIPTS:", transcripts);
+        console.log("TARGET:", targetWord);
+        console.log("TRANSCRIPTS:", transcripts);
 
         for (const t of transcripts) {
 
@@ -423,7 +436,6 @@ console.log("TRANSCRIPTS:", transcripts);
             return;
           }
 
-          // fallback candidate
           if (
             t.length >
             bestTranscript.length
@@ -432,7 +444,7 @@ console.log("TRANSCRIPTS:", transcripts);
           }
         }
 
-        // Only fail on FINAL result
+        // Only fail after final result
         const lastResult =
           e.results[e.results.length - 1];
 
@@ -479,7 +491,9 @@ console.log("TRANSCRIPTS:", transcripts);
       };
 
       try {
+
         rec.start();
+
       } catch {
 
         listeningRef.current = false;
