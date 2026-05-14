@@ -70,7 +70,7 @@ function normalize(s: string): string {
     .trim()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z]/g, "");
+    .replace(/[^a-z0-9]/g, "");
 }
 
 export function isGoodEnough(
@@ -112,7 +112,7 @@ export function isGoodEnough(
       extraCandidates.push(r.slice(1));
     }
 
-    // ST cluster support
+    // ── ST cluster support ─────────────────────
     if (
       isStWord &&
       /^ss+/.test(r)
@@ -122,7 +122,7 @@ export function isGoodEnough(
       );
     }
 
-    // TW cluster support
+    // ── TW cluster support ─────────────────────
     if (
       isTwWord &&
       /^tt+/.test(r)
@@ -132,7 +132,7 @@ export function isGoodEnough(
       );
     }
 
-    // DR cluster support
+    // ── DR cluster support ─────────────────────
     if (isDrWord) {
 
       // Browser slikt vaak de D in
@@ -160,11 +160,18 @@ export function isGoodEnough(
         extraCandidates.push("drop");
       }
 
-      if (r === "drive") {
+      if (
+        r === "drive" ||
+        r === "live"
+      ) {
         extraCandidates.push("druif");
       }
 
-      if (r === "rie") {
+      if (
+        r === "rie" ||
+        r === "3" ||
+        r === "dri"
+      ) {
         extraCandidates.push("drie");
       }
 
@@ -194,7 +201,9 @@ export function isGoodEnough(
       if (
         r === "raai" ||
         r === "raaien" ||
-        r === "naaien"
+        r === "naaien" ||
+        r === "ryan" ||
+        r === "brian"
       ) {
         extraCandidates.push("draaien");
       }
@@ -254,7 +263,7 @@ export function isGoodEnough(
       return true;
     }
 
-    // Contains — only for longer pieces
+    // Contains — alleen langere stukken
     if (
       r.length >= 4 &&
       (
@@ -368,7 +377,7 @@ export function useRecognition() {
       // Keep refining speech
       rec.interimResults = true;
 
-      // More alternatives = more chance to match
+      // More alternatives
       rec.maxAlternatives = 10;
 
       rec.onstart = () => {
@@ -386,6 +395,7 @@ export function useRecognition() {
 
         const transcripts: string[] = [];
 
+        // ── Verzamel transcripts ─────────────────
         for (
           let ri = 0;
           ri < e.results.length;
@@ -401,9 +411,17 @@ export function useRecognition() {
             ai++
           ) {
 
-            transcripts.push(
-              result[ai].transcript
-            );
+            const cleaned =
+              result[ai]
+                .transcript
+                .trim();
+
+            // Ignore kleine partials
+            if (
+              cleaned.length >= 3
+            ) {
+              transcripts.push(cleaned);
+            }
           }
         }
 
@@ -412,6 +430,7 @@ export function useRecognition() {
         console.log("TARGET:", targetWord);
         console.log("TRANSCRIPTS:", transcripts);
 
+        // ── Match transcripts ────────────────────
         for (const t of transcripts) {
 
           if (
@@ -436,6 +455,7 @@ export function useRecognition() {
             return;
           }
 
+          // fallback transcript
           if (
             t.length >
             bestTranscript.length
@@ -444,7 +464,7 @@ export function useRecognition() {
           }
         }
 
-        // Only fail after final result
+        // ── Alleen failen op final result ────────
         const lastResult =
           e.results[e.results.length - 1];
 
