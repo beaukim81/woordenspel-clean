@@ -519,19 +519,19 @@ listen((matched) => {
                     />
                   ))}
                 </span>
-                Spreekt...
+                Luister...
               </>
             ) : listening ? (
               <>
                 <motion.div animate={{ scale:[1,1.25,1] }} transition={{ duration:0.7, repeat:Infinity }}>
                   <Mic className="w-6 h-6" />
                 </motion.div>
-                Luisteren...
+                Jouw beurt!
               </>
             ) : (
               <>
                 <Volume2 className="w-6 h-6" />
-                Zeg het!
+                Hoor het woord
               </>
             )}
           </span>
