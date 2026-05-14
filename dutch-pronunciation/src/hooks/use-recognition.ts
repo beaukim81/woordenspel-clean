@@ -107,12 +107,12 @@ export function isGoodEnough(
 
     if (!r) continue;
 
-    // Remove accidental leading vowel
+    // ── Remove accidental leading vowel ─────────────────
     if (/^[eaio]/.test(r)) {
       extraCandidates.push(r.slice(1));
     }
 
-    // ── ST cluster support ─────────────────────
+    // ── ST cluster support ──────────────────────────────
     if (
       isStWord &&
       /^ss+/.test(r)
@@ -122,7 +122,7 @@ export function isGoodEnough(
       );
     }
 
-    // ── TW cluster support ─────────────────────
+    // ── TW cluster support ──────────────────────────────
     if (
       isTwWord &&
       /^tt+/.test(r)
@@ -132,72 +132,99 @@ export function isGoodEnough(
       );
     }
 
-    // ── DR cluster support ─────────────────────
+    // ── DR cluster support ──────────────────────────────
     if (isDrWord) {
 
       // Browser slikt vaak de D in
       if (
         r.startsWith("r") &&
-        r.length >= 3
+        r.length >= 2
       ) {
         extraCandidates.push("d" + r);
       }
 
-      // Common DR mistakes
-      if (r === "raad") {
-        extraCandidates.push("draad");
+      // droom
+      if (
+        r === "room" ||
+        r === "rhoon"
+      ) {
+        extraCandidates.push("droom");
       }
 
-      if (r === "raak") {
-        extraCandidates.push("draak");
-      }
-
-      if (r === "vragen") {
-        extraCandidates.push("dragen");
-      }
-
-      if (r === "rob") {
-        extraCandidates.push("drop");
-      }
-
+      // druif
       if (
         r === "drive" ||
-        r === "live"
+        r === "driv" ||
+        r === "live" ||
+        r === "ruif" ||
+        r === "ruig" ||
+        r === "druyf" ||
+        r === "druijf" ||
+        r === "druijff"
       ) {
         extraCandidates.push("druif");
       }
 
+      // draad
+      if (
+        r === "raad" ||
+        r === "draat"
+      ) {
+        extraCandidates.push("draad");
+      }
+
+      // draak
+      if (
+        r === "raak" ||
+        r === "draken"
+      ) {
+        extraCandidates.push("draak");
+      }
+
+      // dragen
+      if (
+        r === "vragen" ||
+        r === "rager"
+      ) {
+        extraCandidates.push("dragen");
+      }
+
+      // drop
+      if (
+        r === "rob"
+      ) {
+        extraCandidates.push("drop");
+      }
+
+      // drie
       if (
         r === "rie" ||
         r === "3" ||
-        r === "dri"
-      ) {
-        extraCandidates.push("drie");
-      }
-
-      if (
+        r === "tree" ||
+        r === "free" ||
         r === "de" ||
         r === "dee" ||
-        r === "die"
+        r === "die" ||
+        r === "djie"
       ) {
         extraCandidates.push("drie");
       }
 
+      // drum
       if (
-        r === "tree" ||
-        r === "free"
+        r === "rum"
       ) {
-        extraCandidates.push("drie");
-      }
-
-      if (r === "rum") {
         extraCandidates.push("drum");
       }
 
-      if (r === "rank") {
+      // drank
+      if (
+        r === "rank"
+      ) {
         extraCandidates.push("drank");
       }
 
+      // draaien
       if (
         r === "raai" ||
         r === "raaien" ||
@@ -208,8 +235,9 @@ export function isGoodEnough(
         extraCandidates.push("draaien");
       }
 
+      // General DR prefix repair
       if (
-        r.length >= 4 &&
+        r.length >= 3 &&
         (
           r.startsWith("rie") ||
           r.startsWith("rop") ||
@@ -220,13 +248,6 @@ export function isGoodEnough(
       ) {
         extraCandidates.push("d" + r);
       }
-
-      if (
-        r.startsWith("die") ||
-        r.startsWith("djie")
-      ) {
-        extraCandidates.push("drie");
-      }
     }
   }
 
@@ -235,7 +256,7 @@ export function isGoodEnough(
     ...extraCandidates,
   ];
 
-  // ── Clean repeated transcripts ─────────────────────
+  // ── Clean repeated transcripts ───────────────────────
   const cleanedCandidates = allCandidates.map((c) => {
 
     const words = c.split(" ");
@@ -258,12 +279,12 @@ export function isGoodEnough(
 
     if (!r) continue;
 
-    // Exact
+    // ── Exact ──────────────────────────────────────────
     if (r === t) {
       return true;
     }
 
-    // Contains — alleen langere stukken
+    // ── Contains ───────────────────────────────────────
     if (
       r.length >= 4 &&
       (
@@ -274,12 +295,12 @@ export function isGoodEnough(
       return true;
     }
 
-    // Prefix matching
+    // ── Prefix matching ────────────────────────────────
     const prefix = t.slice(
       0,
       Math.max(
         2,
-        Math.floor(t.length * 0.72)
+        Math.floor(t.length * 0.6)
       )
     );
 
@@ -290,7 +311,7 @@ export function isGoodEnough(
       return true;
     }
 
-    // Levenshtein fuzzy matching
+    // ── Levenshtein fuzzy matching ─────────────────────
     const maxDist =
       (t.length >= 6 ? 2 : 1) +
       clusterBonus;
@@ -332,7 +353,7 @@ type OnResult = (
   transcript: string
 ) => void;
 
-// ── Hook ───────────────────────────────────────────────────────────
+// ── Hook ───────────────────────────────────────────────
 export function useRecognition() {
 
   const [listening, setListening] =
@@ -371,13 +392,13 @@ export function useRecognition() {
 
       rec.lang = "nl-NL";
 
-      // Better for children speaking slower
+      // Kinderuitspraak verbeteren
       rec.continuous = true;
 
-      // Keep refining speech
+      // Laat browser blijven verfijnen
       rec.interimResults = true;
 
-      // More alternatives
+      // Meer alternatieven
       rec.maxAlternatives = 10;
 
       rec.onstart = () => {
@@ -395,7 +416,6 @@ export function useRecognition() {
 
         const transcripts: string[] = [];
 
-        // ── Verzamel transcripts ─────────────────
         for (
           let ri = 0;
           ri < e.results.length;
@@ -416,9 +436,10 @@ export function useRecognition() {
                 .transcript
                 .trim();
 
-            // Ignore kleine partials
+            // BELANGRIJK:
+            // GEEN harde minimum lengte meer
             if (
-              cleaned.length >= 3
+              cleaned.length > 0
             ) {
               transcripts.push(cleaned);
             }
@@ -430,7 +451,6 @@ export function useRecognition() {
         console.log("TARGET:", targetWord);
         console.log("TRANSCRIPTS:", transcripts);
 
-        // ── Match transcripts ────────────────────
         for (const t of transcripts) {
 
           if (
@@ -455,7 +475,6 @@ export function useRecognition() {
             return;
           }
 
-          // fallback transcript
           if (
             t.length >
             bestTranscript.length
@@ -464,7 +483,7 @@ export function useRecognition() {
           }
         }
 
-        // ── Alleen failen op final result ────────
+        // Alleen failen na FINAL result
         const lastResult =
           e.results[e.results.length - 1];
 
