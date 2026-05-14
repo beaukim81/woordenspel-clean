@@ -24,13 +24,17 @@ interface SpeechResultEvent {
 interface SpeechResultList {
   isFinal?: boolean;
   length: number;
+
   [index: number]: {
     transcript: string;
   };
 }
 
 // ── Levenshtein ────────────────────────────────────────────────────
-function levenshtein(a: string, b: string): number {
+function levenshtein(
+  a: string,
+  b: string
+): number {
 
   const m = a.length;
   const n = b.length;
@@ -68,14 +72,22 @@ function levenshtein(a: string, b: string): number {
 }
 
 // ── Normalize ──────────────────────────────────────────────────────
-function normalize(s: string): string {
+function normalize(
+  s: string
+): string {
 
   return s
     .toLowerCase()
     .trim()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]/g, "");
+    .replace(
+      /[\u0300-\u036f]/g,
+      ""
+    )
+    .replace(
+      /[^a-z0-9]/g,
+      ""
+    );
 }
 
 // ── Matching logic ─────────────────────────────────────────────────
@@ -102,15 +114,20 @@ export function isGoodEnough(
 
   const extraCandidates: string[] = [];
 
-  const isDrWord = t.startsWith("dr");
-  const isStWord = t.startsWith("st");
-  const isTwWord = t.startsWith("tw");
+  const isDrWord =
+    t.startsWith("dr");
+
+  const isStWord =
+    t.startsWith("st");
+
+  const isTwWord =
+    t.startsWith("tw");
 
   for (const r of candidates) {
 
     if (!r) continue;
 
-    // ── ST ─────────────────────────────────────────────
+    // ── ST support ────────────────────────────────────
     if (
       isStWord &&
       /^ss+/.test(r)
@@ -120,7 +137,7 @@ export function isGoodEnough(
       );
     }
 
-    // ── TW ─────────────────────────────────────────────
+    // ── TW support ────────────────────────────────────
     if (
       isTwWord &&
       /^tt+/.test(r)
@@ -130,15 +147,17 @@ export function isGoodEnough(
       );
     }
 
-    // ── DR ─────────────────────────────────────────────
+    // ── DR support ────────────────────────────────────
     if (isDrWord) {
 
-      // Browser slikt D in
+      // D wordt soms weggeslikt
       if (
         r.startsWith("r") &&
         r.length >= 2
       ) {
-        extraCandidates.push("d" + r);
+        extraCandidates.push(
+          "d" + r
+        );
       }
 
       // droom
@@ -148,9 +167,15 @@ export function isGoodEnough(
           "rhoon",
           "ram",
           "dro",
+          "roam",
+          "rohm",
+          "rome",
+          "home",
         ].includes(r)
       ) {
-        extraCandidates.push("droom");
+        extraCandidates.push(
+          "droom"
+        );
       }
 
       // druif
@@ -161,23 +186,38 @@ export function isGoodEnough(
           "live",
           "ruif",
           "ruig",
+          "ruit",
+          "eruit",
+          "draait",
           "ru",
           "druyf",
           "druijf",
           "druijff",
         ].includes(r)
       ) {
-        extraCandidates.push("druif");
+        extraCandidates.push(
+          "druif"
+        );
       }
 
       // draak
       if (
         [
           "raak",
+          "raaq",
+          "raac",
+          "raakh",
+          "raack",
+          "raek",
+          "raeck",
           "draken",
+          "draek",
+          "draeck",
         ].includes(r)
       ) {
-        extraCandidates.push("draak");
+        extraCandidates.push(
+          "draak"
+        );
       }
 
       // draad
@@ -185,9 +225,12 @@ export function isGoodEnough(
         [
           "raad",
           "draat",
+          "draht",
         ].includes(r)
       ) {
-        extraCandidates.push("draad");
+        extraCandidates.push(
+          "draad"
+        );
       }
 
       // dragen
@@ -195,18 +238,30 @@ export function isGoodEnough(
         [
           "vragen",
           "rager",
+          "rage",
+          "raj",
+          "raige",
         ].includes(r)
       ) {
-        extraCandidates.push("dragen");
+        extraCandidates.push(
+          "dragen"
+        );
       }
 
       // drop
       if (
         [
           "rob",
+          "drap",
+          "drab",
+          "dropp",
+          "drob",
+          "drapp",
         ].includes(r)
       ) {
-        extraCandidates.push("drop");
+        extraCandidates.push(
+          "drop"
+        );
       }
 
       // drie
@@ -220,9 +275,17 @@ export function isGoodEnough(
           "dee",
           "die",
           "djie",
+          "drum",
+          "dram",
+          "dramm",
+          "drumm",
+          "druc",
+          "druse",
         ].includes(r)
       ) {
-        extraCandidates.push("drie");
+        extraCandidates.push(
+          "drie"
+        );
       }
 
       // drum
@@ -232,16 +295,21 @@ export function isGoodEnough(
           "trump",
         ].includes(r)
       ) {
-        extraCandidates.push("drum");
+        extraCandidates.push(
+          "drum"
+        );
       }
 
       // drank
       if (
         [
           "rank",
+          "drunk",
         ].includes(r)
       ) {
-        extraCandidates.push("drank");
+        extraCandidates.push(
+          "drank"
+        );
       }
 
       // draaien
@@ -252,9 +320,12 @@ export function isGoodEnough(
           "naaien",
           "ryan",
           "brian",
+          "draaien",
         ].includes(r)
       ) {
-        extraCandidates.push("draaien");
+        extraCandidates.push(
+          "draaien"
+        );
       }
     }
   }
@@ -264,22 +335,24 @@ export function isGoodEnough(
     ...extraCandidates,
   ];
 
-  // ── Clean duplicates ────────────────────────────────
-  const cleanedCandidates = allCandidates.map((c) => {
+  // ── Duplicate cleanup ───────────────────────────────
+  const cleanedCandidates =
+    allCandidates.map((c) => {
 
-    const words = c.split(" ");
+      const words =
+        c.split(" ");
 
-    if (
-      words.length >= 2 &&
-      words.every(
-        (w) => w === words[0]
-      )
-    ) {
-      return words[0];
-    }
+      if (
+        words.length >= 2 &&
+        words.every(
+          (w) => w === words[0]
+        )
+      ) {
+        return words[0];
+      }
 
-    return c;
-  });
+      return c;
+    });
 
   for (const r of cleanedCandidates) {
 
@@ -287,6 +360,16 @@ export function isGoodEnough(
 
     // exact
     if (r === t) {
+      return true;
+    }
+
+    // korte woorden
+    if (
+      t.length <= 5 &&
+      r.startsWith(
+        t.slice(0, 3)
+      )
+    ) {
       return true;
     }
 
@@ -306,7 +389,9 @@ export function isGoodEnough(
       0,
       Math.max(
         2,
-        Math.floor(t.length * 0.6)
+        Math.floor(
+          t.length * 0.6
+        )
       )
     );
 
@@ -319,10 +404,13 @@ export function isGoodEnough(
 
     // fuzzy
     const maxDist =
-      t.length >= 6 ? 2 : 1;
+      t.length >= 6
+        ? 2
+        : 1;
 
     if (
-      levenshtein(r, t) <= maxDist
+      levenshtein(r, t) <=
+      maxDist
     ) {
       return true;
     }
@@ -336,7 +424,9 @@ function getSpeechRecognitionClass():
   | (new () => SpeechRec)
   | null {
 
-  if (typeof window === "undefined") {
+  if (
+    typeof window === "undefined"
+  ) {
     return null;
   }
 
@@ -348,7 +438,9 @@ function getSpeechRecognitionClass():
 
   return (
     (w["SpeechRecognition"] ??
-      w["webkitSpeechRecognition"] ??
+      w[
+        "webkitSpeechRecognition"
+      ] ??
       null) as new () => SpeechRec
   );
 }
@@ -368,10 +460,9 @@ export function useRecognition() {
     useRef(false);
 
   const recRef =
-    useRef<SpeechRec | null>(null);
-
-  const restartCountRef =
-    useRef(0);
+    useRef<SpeechRec | null>(
+      null
+    );
 
   const supported =
     !!getSpeechRecognitionClass();
@@ -400,18 +491,19 @@ export function useRecognition() {
 
       rec.lang = "nl-NL";
 
-      // stabieler
+      // ÉÉN woord per beurt
       rec.continuous = false;
 
-      // GEEN halve woorden meer
+      // Geen halve woorden
       rec.interimResults = false;
 
-      // meer alternatieven
-      rec.maxAlternatives = 15;
+      // Minder spam
+      rec.maxAlternatives = 5;
 
       rec.onstart = () => {
 
-        listeningRef.current = true;
+        listeningRef.current =
+          true;
 
         setListening(true);
       };
@@ -422,35 +514,50 @@ export function useRecognition() {
         e: SpeechResultEvent
       ) => {
 
-        const transcripts: string[] = [];
+        const transcripts =
+          new Set<string>();
+
+        // Alleen laatste resultaat
+        const lastResult =
+          e.results[
+            e.results.length - 1
+          ];
+
+        if (!lastResult) {
+          return;
+        }
 
         for (
-          let ri = 0;
-          ri < e.results.length;
-          ri++
+          let ai = 0;
+          ai < lastResult.length;
+          ai++
         ) {
 
-          const result =
-            e.results[ri];
+          const cleaned =
+            lastResult[ai]
+              .transcript
+              .trim();
 
-          for (
-            let ai = 0;
-            ai < result.length;
-            ai++
+          if (
+            cleaned.length > 0
           ) {
 
-            const cleaned =
-              result[ai]
-                .transcript
-                .trim();
+            // Alleen eerste woord
+            const firstWord =
+              cleaned
+                .split(/\s+/)[0]
+                ?.trim();
 
-            if (
-              cleaned.length > 0
-            ) {
-              transcripts.push(cleaned);
+            if (firstWord) {
+              transcripts.add(
+                firstWord
+              );
             }
           }
         }
+
+        const transcriptList =
+          Array.from(transcripts);
 
         console.log(
           "TARGET:",
@@ -459,12 +566,12 @@ export function useRecognition() {
 
         console.log(
           "TRANSCRIPTS:",
-          transcripts
+          transcriptList
         );
 
         let bestTranscript = "";
 
-        for (const t of transcripts) {
+        for (const t of transcriptList) {
 
           if (
             isGoodEnough(
@@ -475,11 +582,10 @@ export function useRecognition() {
 
             resultFired = true;
 
-            listeningRef.current = false;
+            listeningRef.current =
+              false;
 
             setListening(false);
-
-            restartCountRef.current = 0;
 
             rec.stop();
 
@@ -496,34 +602,31 @@ export function useRecognition() {
           }
         }
 
-        const lastResult =
-          e.results[e.results.length - 1];
-
         if (
-          lastResult?.isFinal &&
-          transcripts.length > 0
+          lastResult.isFinal
         ) {
 
           setTimeout(() => {
 
-            if (resultFired) {
+            if (
+              resultFired
+            ) {
               return;
             }
 
             resultFired = true;
 
-            listeningRef.current = false;
+            listeningRef.current =
+              false;
 
             setListening(false);
-
-            restartCountRef.current = 0;
 
             onResult(
               false,
               bestTranscript
             );
 
-          }, 900);
+          }, 450);
         }
       };
 
@@ -531,64 +634,27 @@ export function useRecognition() {
 
         resultFired = true;
 
-        listeningRef.current = false;
+        listeningRef.current =
+          false;
 
         setListening(false);
-
-        restartCountRef.current = 0;
 
         onResult(false, "");
       };
 
       rec.onend = () => {
 
-        if (resultFired) {
+        listeningRef.current =
+          false;
 
-          listeningRef.current = false;
+        setListening(false);
 
-          setListening(false);
+        if (!resultFired) {
 
-          restartCountRef.current = 0;
-
-          return;
-        }
-
-        // auto restart
-        if (
-          restartCountRef.current >= 4
-        ) {
-
-          listeningRef.current = false;
-
-          setListening(false);
-
-          restartCountRef.current = 0;
+          resultFired = true;
 
           onResult(false, "");
-
-          return;
         }
-
-        restartCountRef.current += 1;
-
-        setTimeout(() => {
-
-          try {
-
-            rec.start();
-
-          } catch {
-
-            listeningRef.current = false;
-
-            setListening(false);
-
-            restartCountRef.current = 0;
-
-            onResult(false, "");
-          }
-
-        }, 150);
       };
 
       try {
@@ -597,11 +663,10 @@ export function useRecognition() {
 
       } catch {
 
-        listeningRef.current = false;
+        listeningRef.current =
+          false;
 
         setListening(false);
-
-        restartCountRef.current = 0;
       }
     },
     []
@@ -614,8 +679,6 @@ export function useRecognition() {
     listeningRef.current = false;
 
     setListening(false);
-
-    restartCountRef.current = 0;
 
   }, []);
 
