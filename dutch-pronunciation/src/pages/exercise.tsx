@@ -173,7 +173,7 @@ listen((matched) => {
         setNoMatch(false);
       }, 2000);
 
-    }, 700);
+    }, 1600);
   }
 
 }, target);
