@@ -146,7 +146,8 @@ export function isGoodEnough(
       // droom
       if (
         r === "room" ||
-        r === "rhoon"
+        r === "rhoon" ||
+        r === "ram"
       ) {
         extraCandidates.push("droom");
       }
@@ -212,7 +213,8 @@ export function isGoodEnough(
 
       // drum
       if (
-        r === "rum"
+        r === "rum" ||
+        r === "trump"
       ) {
         extraCandidates.push("drum");
       }
@@ -235,7 +237,7 @@ export function isGoodEnough(
         extraCandidates.push("draaien");
       }
 
-      // General DR prefix repair
+      // General DR repair
       if (
         r.length >= 3 &&
         (
@@ -392,7 +394,7 @@ export function useRecognition() {
 
       rec.lang = "nl-NL";
 
-      // Kinderuitspraak verbeteren
+      // Beter voor kinderen
       rec.continuous = true;
 
       // Laat browser blijven verfijnen
@@ -436,8 +438,7 @@ export function useRecognition() {
                 .transcript
                 .trim();
 
-            // BELANGRIJK:
-            // GEEN harde minimum lengte meer
+            // GEEN minimum lengte
             if (
               cleaned.length > 0
             ) {
@@ -491,16 +492,23 @@ export function useRecognition() {
           lastResult?.isFinal
         ) {
 
-          resultFired = true;
+          // Wacht nog even op late alternatieven
+          setTimeout(() => {
 
-          listeningRef.current = false;
+            if (resultFired) return;
 
-          setListening(false);
+            resultFired = true;
 
-          onResult(
-            false,
-            bestTranscript
-          );
+            listeningRef.current = false;
+
+            setListening(false);
+
+            onResult(
+              false,
+              bestTranscript
+            );
+
+          }, 650);
         }
       };
 
@@ -523,9 +531,16 @@ export function useRecognition() {
 
         if (!resultFired) {
 
-          resultFired = true;
+          // kleine delay voor late transcripts
+          setTimeout(() => {
 
-          onResult(false, "");
+            if (resultFired) return;
+
+            resultFired = true;
+
+            onResult(false, "");
+
+          }, 450);
         }
       };
 
