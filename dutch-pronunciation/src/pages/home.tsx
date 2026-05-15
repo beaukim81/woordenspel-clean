@@ -16,8 +16,6 @@ import {
   ACHIEVEMENTS,
 } from "@/lib/achievements";
 
-import { avatarForColor } from "@/pages/profile-select";
-
 import egg from "@/assets/mascots/egg.png";
 import babyDragon from "@/assets/mascots/baby-dragon.png";
 import youngDragon from "@/assets/mascots/young-dragon.png";
