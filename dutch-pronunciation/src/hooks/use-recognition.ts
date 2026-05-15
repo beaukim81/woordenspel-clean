@@ -520,10 +520,10 @@ export function useRecognition() {
       rec.lang = "nl-NL";
 
       // Korte directe herkenning
-      rec.continuous = false;
+      rec.continuous = true;
 
       // Geen halve woorden
-      rec.interimResults = false;
+      rec.interimResults = true;
 
       // Meer alternatieven
       rec.maxAlternatives = 15;
