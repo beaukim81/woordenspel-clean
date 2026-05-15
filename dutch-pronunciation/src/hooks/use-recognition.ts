@@ -229,20 +229,19 @@ export function isGoodEnough(
         );
       }
 
-      // drie
+      // ── NIEUW WOORD: DRAVEN ─────────────────────────
       if (
         [
-          "3",
-          "rie",
-          "drie",
-          "dri",
-          "drih",
-          "tree",
-          "free",
+          "draven",
+          "draaven",
+          "dravin",
+          "dravenn",
+          "drayven",
+          "drayvin",
         ].includes(r)
       ) {
         extraCandidates.push(
-          "drie"
+          "draven"
         );
       }
 
@@ -305,12 +304,13 @@ export function isGoodEnough(
     }
 
     // speciale fixes
+
     if (
-      t === "drie" &&
+      t === "draven" &&
       (
-        r === "3" ||
-        r === "rie" ||
-        r.startsWith("dri")
+        r === "draven" ||
+        r.startsWith("drav") ||
+        r.startsWith("dra")
       )
     ) {
       return true;
@@ -331,6 +331,16 @@ export function isGoodEnough(
       t === "draad" &&
       (
         r === "raad" ||
+        r.startsWith("dra")
+      )
+    ) {
+      return true;
+    }
+
+    if (
+      t === "draak" &&
+      (
+        r === "raak" ||
         r.startsWith("dra")
       )
     ) {
@@ -534,7 +544,7 @@ export function useRecognition() {
           transcriptList
         );
 
-        // ── Alleen eerste transcript gebruiken ─────────
+        // Alleen eerste transcript gebruiken
         const firstTranscript =
           transcriptList[0] || "";
 
