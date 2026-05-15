@@ -94,6 +94,12 @@ export function isGoodEnough(
 ): boolean {
 
   const t = normalize(target);
+const strippedRecognized =
+  normalize(recognized)
+.replace(/^de\s+/, "")
+.replace(/^het\s+/, "")
+.replace(/^een\s+/, "")
+.replace(/^woord\s+/, "");
 
   if (!t) {
     return false;
@@ -104,10 +110,31 @@ export function isGoodEnough(
     .map(normalize)
     .filter(Boolean);
 
-  const candidates = [
-    normalize(recognized),
-    ...parts,
-  ];
+const candidates = [
+  normalize(recognized),
+strippedRecognized,
+  ...parts,
+];
+
+const joinedCandidates: string[] = [];
+
+for (let i = 0; i < parts.length; i++) {
+
+  const current =
+    parts[i];
+
+  const next =
+    parts[i + 1];
+
+  if (current && next) {
+
+    joinedCandidates.push(
+      normalize(
+        current + next
+      )
+    );
+  }
+}
 
   const extraCandidates: string[] = [];
 
@@ -319,10 +346,11 @@ export function isGoodEnough(
     }
   }
 
-  const allCandidates = [
-    ...candidates,
-    ...extraCandidates,
-  ];
+const allCandidates = [
+  ...candidates,
+  ...joinedCandidates,
+  ...extraCandidates,
+];
 
   for (const r of allCandidates) {
 
@@ -563,18 +591,10 @@ export function useRecognition() {
               cleaned.length > 0
             ) {
 
-              const firstWord =
-                cleaned
-                  .split(/\s+/)[0]
-                  ?.trim();
-
-              if (firstWord) {
-
-                transcripts.push({
-                  text: firstWord,
-                  confidence,
-                });
-              }
+transcripts.push({
+  text: cleaned,
+  confidence,
+});
             }
           }
         }
