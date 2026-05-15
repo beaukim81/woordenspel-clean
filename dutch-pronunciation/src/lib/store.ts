@@ -113,7 +113,7 @@ export const PRELOADED_WORDS: WordData[] = [
   { word: "stroom", emoji: "⚡", cluster: "str" },
   { word: "streng", emoji: "📏", cluster: "str" },
   { word: "stralen", emoji: "☀️", cluster: "str" },
-  { word: "struisvogel", emoji: "🪶", cluster: "str" },
+  { word: "stroop", emoji: "🍯", cluster: "str" },
   { word: "strijd", emoji: "⚔️", cluster: "str" },
   { word: "stronk", emoji: "🪵", cluster: "str" },
 
