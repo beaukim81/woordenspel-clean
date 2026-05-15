@@ -50,15 +50,15 @@ export function checkNewAchievements(
 
 /** Level title by threshold — highest matching threshold wins */
 const LEVEL_THRESHOLDS: Array<[number, string]> = [
-  [20, "Kampioen"],
-  [15, "Grootmeester"],
-  [10, "Meester"],
-  [7,  "Held"],
-  [5,  "Ridder"],
-  [4,  "Oefenaar"],
-  [3,  "Spreker"],
-  [2,  "Leerling"],
-  [1,  "Beginner"],
+  [20, "Legende 👑"],
+  [15, "Leesmeester"],
+  [10, "Woordenbaas"],
+  [7,  "Taalheld"],
+  [5,  "Superlezer"],
+  [4,  "Klankheld"],
+  [3,  "Oefenheld"],
+  [2,  "Ontdekker"],
+  [1,  "Starter"],
 ];
 
 export function getLevelTitle(level: number): string {
