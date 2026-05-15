@@ -507,9 +507,9 @@ export function useRecognition() {
       recRef.current = rec;
 
       rec.lang = "nl-NL";
-      rec.continuous = true;
-      rec.interimResults = true;
-      rec.maxAlternatives = 15;
+      rec.continuous = false;
+      rec.interimResults = false;
+      rec.maxAlternatives = 25;
 
       rec.onstart = () => {
 
