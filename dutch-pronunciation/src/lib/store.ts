@@ -10,7 +10,8 @@ export type Difficulty =
   | 'dr'
   | 'sl'
   | 'tw'
-  | 'str';
+  | 'str'
+  | 'tr';
 
 export interface WordData {
   word: string;
@@ -103,6 +104,30 @@ export const PRELOADED_WORDS: WordData[] = [
   { word: "twinkel",  emoji: "✨", cluster: "tw" },
   { word: "twijgen",  emoji: "🌿", cluster: "tw" },
   { word: "twister",  emoji: "🌪️", cluster: "tw" },
+
+    // str
+  { word: "straat", emoji: "🛣️", cluster: "str" },
+  { word: "strand", emoji: "🏖️", cluster: "str" },
+  { word: "struik", emoji: "🌳", cluster: "str" },
+  { word: "strik", emoji: "🎀", cluster: "str" },
+  { word: "stroom", emoji: "⚡", cluster: "str" },
+  { word: "streng", emoji: "📏", cluster: "str" },
+  { word: "stralen", emoji: "☀️", cluster: "str" },
+  { word: "struisvogel", emoji: "🪶", cluster: "str" },
+  { word: "strijd", emoji: "⚔️", cluster: "str" },
+  { word: "stronk", emoji: "🪵", cluster: "str" },
+
+   // ── tr ─────────────────────────────────────────────
+  { word: "trein",     emoji: "🚂", cluster: "tr" },
+  { word: "trap",      emoji: "🪜", cluster: "tr" },
+  { word: "tractor",   emoji: "🚜", cluster: "tr" },
+  { word: "trui",      emoji: "🧥", cluster: "tr" },
+  { word: "trommel",   emoji: "🥁", cluster: "tr" },
+  { word: "troon",     emoji: "👑", cluster: "tr" },
+  { word: "tranen",    emoji: "😢", cluster: "tr" },
+  { word: "truc",      emoji: "🎩", cluster: "tr" },
+  { word: "trillen",   emoji: "📳", cluster: "tr" },
+  { word: "trampoline",emoji: "🤸", cluster: "tr" },
 ];
 
 const CUSTOM_WORD_EMOJIS: Record<
@@ -147,7 +172,7 @@ const CUSTOM_WORD_EMOJIS: Record<
   drone: "🚁",
   druppel: "💧",
   drijven: "🛟",
-  drakenkop: "🐲",
+  draak: "🐲",
   dressoir: "🪵",
 
   // ── sl ─────────────────────────────────────────────
@@ -164,6 +189,28 @@ const CUSTOM_WORD_EMOJIS: Record<
   twilight: "🌙",
   twijgje: "🌿",
   twinkelster: "✨",
+
+  // ── tr ─────────────────────────────────────────────
+  trein: "🚂",
+  trampoline: "🤸",
+  trechter: "🔻",
+  traktor: "🚜",
+  trillen: "📳",
+  traan: "💧",
+  truffel: "🍫",
+  trouwen: "💍",
+  trompet: "🎺",
+  trofee: "🏆",
+
+  // ── str ─────────────────────────────────────────────
+  straat: "🛣️",
+  strandbal: "🏖️",
+  struiken: "🌳",
+  strijken: "👕",
+  stroom: "🔌",
+  stralen: "☀️",
+  struisveer: "🪶",
+  strijdschild: "🛡️",
 };
 
 export function detectCluster(
@@ -173,6 +220,9 @@ export function detectCluster(
   const w =
     word.toLowerCase().trim();
 
+  // langste clusters eerst
+  if (w.startsWith("str")) return "str";
+
   if (w.startsWith("sp")) return "sp";
   if (w.startsWith("bl")) return "bl";
   if (w.startsWith("br")) return "br";
@@ -180,6 +230,7 @@ export function detectCluster(
   if (w.startsWith("dr")) return "dr";
   if (w.startsWith("sl")) return "sl";
   if (w.startsWith("tw")) return "tw";
+  if (w.startsWith("tr")) return "tr";
 
   return null;
 }
@@ -195,6 +246,8 @@ const CLUSTER_EMOJI: Record<
   dr: "🌟",
   sl: "🐍",
   tw: "✨",
+  str: "🏖️",
+  tr: "🚂",
 };
 
 export function customWordToWordData(
