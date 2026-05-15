@@ -146,40 +146,82 @@ if (target && recognitionSupported) {
 
   window.setTimeout(() => {
 
-    listen((matched) => {
+listen((matched, transcript, confidence) => {
 
-      // stop oude foutmeldingen
-      if (noMatchTimeoutRef.current) {
-        clearTimeout(noMatchTimeoutRef.current);
-        noMatchTimeoutRef.current = null;
-      }
+  // stop oude foutmeldingen
+  if (noMatchTimeoutRef.current) {
+    clearTimeout(noMatchTimeoutRef.current);
+    noMatchTimeoutRef.current = null;
+  }
 
-      if (matched) {
+  console.log(
+    "Speech result:",
+    {
+      matched,
+      transcript,
+      confidence,
+      target,
+    }
+  );
 
+  // ── SUCCES ───────────────────────────────────────
+  if (matched) {
+
+    // Lage confidence?
+    // Dan liever opnieuw proberen
+    // dan fout tellen.
+
+    const lowConfidence =
+      confidence > 0 &&
+      confidence < 0.45;
+
+    if (lowConfidence) {
+
+      console.log(
+        "Low confidence detected"
+      );
+
+      setNoMatch(true);
+
+      window.setTimeout(() => {
         setNoMatch(false);
+      }, 1400);
 
-        triggerSuccess();
+      return;
+    }
 
-      } else if (!lockRef.current) {
+    setNoMatch(false);
 
-        // wacht even voordat foutmelding verschijnt
-        // zodat late speech recognition nog kan slagen
-        noMatchTimeoutRef.current = window.setTimeout(() => {
+    triggerSuccess();
 
-          if (lockRef.current) return;
+    return;
+  }
 
-          recordWordError(target);
+  // ── GEEN MATCH ──────────────────────────────────
+  if (!lockRef.current) {
 
-          setNoMatch(true);
+    // wacht even voordat foutmelding verschijnt
+    // zodat late speech recognition nog kan slagen
 
-          window.setTimeout(() => {
-            setNoMatch(false);
-          }, 2000);
+    noMatchTimeoutRef.current =
+      window.setTimeout(() => {
 
-        }, 1600);
-      }
+        if (lockRef.current) {
+          return;
+        }
 
-    }, target);
+        recordWordError(target);
+
+        setNoMatch(true);
+
+        window.setTimeout(() => {
+          setNoMatch(false);
+        }, 2000);
+
+      }, 1600);
+  }
+
+}, target);
 
   }, 250);
 }
@@ -212,7 +254,6 @@ if (target && recognitionSupported) {
       { id: Date.now(),     text: `+${COINS_PER_WORD}`,  color: "#facc15", x: -48 },
       { id: Date.now() + 1, text: `+${XP_PER_WORD} XP`, color: "#c084fc", x: 48  },
     ]);
-    void getLevelFromXP;
     setTimeout(() => setWordShake(false), 380);
     setTimeout(() => {
       advanceWord(COINS_PER_WORD, XP_PER_WORD);
