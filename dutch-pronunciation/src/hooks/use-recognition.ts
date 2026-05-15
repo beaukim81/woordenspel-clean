@@ -1,6 +1,5 @@
 import { useCallback, useRef, useState } from "react";
 
-// ── Minimal local types ────────────────────────────────────────────
 interface SpeechRec {
   lang: string;
   continuous: boolean;
@@ -31,7 +30,6 @@ interface SpeechResultList {
   };
 }
 
-// ── Levenshtein ────────────────────────────────────────────────────
 function levenshtein(
   a: string,
   b: string
@@ -72,7 +70,6 @@ function levenshtein(
   return row[n];
 }
 
-// ── Normalize ──────────────────────────────────────────────────────
 function normalize(
   s: string
 ): string {
@@ -91,7 +88,6 @@ function normalize(
     );
 }
 
-// ── Matching logic ─────────────────────────────────────────────────
 export function isGoodEnough(
   recognized: string,
   target: string
@@ -125,7 +121,6 @@ export function isGoodEnough(
 
     if (!r) continue;
 
-    // ── ST support ────────────────────────────────────
     if (isStWord) {
 
       if (
@@ -168,7 +163,6 @@ export function isGoodEnough(
       }
     }
 
-    // ── DR support ────────────────────────────────────
     if (isDrWord) {
 
       if (
@@ -443,7 +437,6 @@ export function isGoodEnough(
   return false;
 }
 
-// ── Detect SpeechRecognition API ───────────────────────────────────
 function getSpeechRecognitionClass():
   | (new () => SpeechRec)
   | null {
@@ -475,7 +468,6 @@ type OnResult = (
   confidence: number
 ) => void;
 
-// ── Hook ───────────────────────────────────────────────────────────
 export function useRecognition() {
 
   const [listening, setListening] =
@@ -515,8 +507,6 @@ export function useRecognition() {
       recRef.current = rec;
 
       rec.lang = "nl-NL";
-
-      // ── Beste balans voor kinderen ─────────────────
       rec.continuous = true;
       rec.interimResults = true;
       rec.maxAlternatives = 15;
@@ -599,47 +589,47 @@ export function useRecognition() {
           transcripts
         );
 
-        // ── Beste transcript kiezen ───────────────────
-        const bestTranscript =
-          transcripts
-            .sort(
-              (a, b) =>
-                b.confidence -
-                a.confidence
-            )[0] ?? {
-              text: "",
-              confidence: 0,
-            };
+        let bestTranscript = "";
 
-        const t =
-          bestTranscript.text;
+        for (const item of transcripts) {
 
-        const confidence =
-          bestTranscript.confidence;
+          const t =
+            item.text;
 
-        if (
-          isGoodEnough(
-            t,
-            targetWord
-          )
-        ) {
+          const confidence =
+            item.confidence;
 
-          resultFired = true;
+          if (
+            isGoodEnough(
+              t,
+              targetWord
+            )
+          ) {
 
-          listeningRef.current =
-            false;
+            resultFired = true;
 
-          setListening(false);
+            listeningRef.current =
+              false;
 
-          rec.stop();
+            setListening(false);
 
-          onResult(
-            true,
-            t,
-            confidence
-          );
+            rec.stop();
 
-          return;
+            onResult(
+              true,
+              t,
+              confidence
+            );
+
+            return;
+          }
+
+          if (
+            t.length >
+            bestTranscript.length
+          ) {
+            bestTranscript = t;
+          }
         }
       };
 
