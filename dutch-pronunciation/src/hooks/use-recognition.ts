@@ -589,9 +589,6 @@ export function useRecognition() {
           }
         }
 
-        const transcriptList =
-          transcripts;
-
         console.log(
           "TARGET:",
           targetWord
@@ -599,56 +596,50 @@ export function useRecognition() {
 
         console.log(
           "TRANSCRIPTS:",
-          transcriptList
+          transcripts
         );
 
-        const firstTranscript =
-          transcriptList[0] ?? {
-            text: "",
-            confidence: 0,
-          };
+        // ── Beste transcript kiezen ───────────────────
+        const bestTranscript =
+          transcripts
+            .sort(
+              (a, b) =>
+                b.confidence -
+                a.confidence
+            )[0] ?? {
+              text: "",
+              confidence: 0,
+            };
 
-        let bestTranscript = "";
+        const t =
+          bestTranscript.text;
 
-        for (const item of [firstTranscript]) {
+        const confidence =
+          bestTranscript.confidence;
 
-          const t =
-            item.text;
+        if (
+          isGoodEnough(
+            t,
+            targetWord
+          )
+        ) {
 
-          const confidence =
-            item.confidence;
+          resultFired = true;
 
-          if (
-            isGoodEnough(
-              t,
-              targetWord
-            )
-          ) {
+          listeningRef.current =
+            false;
 
-            resultFired = true;
+          setListening(false);
 
-            listeningRef.current =
-              false;
+          rec.stop();
 
-            setListening(false);
+          onResult(
+            true,
+            t,
+            confidence
+          );
 
-            rec.stop();
-
-            onResult(
-              true,
-              t,
-              confidence
-            );
-
-            return;
-          }
-
-          if (
-            t.length >
-            bestTranscript.length
-          ) {
-            bestTranscript = t;
-          }
+          return;
         }
       };
 
