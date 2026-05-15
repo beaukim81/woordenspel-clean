@@ -231,6 +231,7 @@ export function detectCluster(
   if (w.startsWith("sl")) return "sl";
   if (w.startsWith("tw")) return "tw";
   if (w.startsWith("tr")) return "tr";
+  if (w.startsWith("str")) return "str";
 
   return null;
 }
