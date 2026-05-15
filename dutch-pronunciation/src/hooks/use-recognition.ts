@@ -117,35 +117,9 @@ export function isGoodEnough(
   const isDrWord =
     t.startsWith("dr");
 
-  const isStWord =
-    t.startsWith("st");
-
-  const isTwWord =
-    t.startsWith("tw");
-
   for (const r of candidates) {
 
     if (!r) continue;
-
-    // ── ST support ────────────────────────────────────
-    if (
-      isStWord &&
-      /^ss+/.test(r)
-    ) {
-      extraCandidates.push(
-        r.replace(/^s+/, "s")
-      );
-    }
-
-    // ── TW support ────────────────────────────────────
-    if (
-      isTwWord &&
-      /^tt+/.test(r)
-    ) {
-      extraCandidates.push(
-        r.replace(/^t+/, "t")
-      );
-    }
 
     // ── DR support ────────────────────────────────────
     if (isDrWord) {
@@ -166,14 +140,9 @@ export function isGoodEnough(
           "room",
           "rhoon",
           "ram",
-          "dro",
           "roam",
-          "rohm",
-          "rome",
-          "home",
           "droem",
           "droam",
-          "chrome",
         ].includes(r)
       ) {
         extraCandidates.push(
@@ -190,9 +159,6 @@ export function isGoodEnough(
           "ruif",
           "ruig",
           "ruit",
-          "eruit",
-          "draait",
-          "ru",
           "druyf",
           "druijf",
           "druijff",
@@ -211,8 +177,6 @@ export function isGoodEnough(
           "raac",
           "rakh",
           "raaak",
-          "raek",
-          "raack",
           "draek",
           "draeck",
           "draken",
@@ -243,8 +207,6 @@ export function isGoodEnough(
           "vragen",
           "rager",
           "rage",
-          "raj",
-          "raige",
         ].includes(r)
       ) {
         extraCandidates.push(
@@ -260,7 +222,6 @@ export function isGoodEnough(
           "drab",
           "dropp",
           "drob",
-          "drapp",
         ].includes(r)
       ) {
         extraCandidates.push(
@@ -271,18 +232,13 @@ export function isGoodEnough(
       // drie
       if (
         [
-          "rie",
           "3",
-          "tree",
-          "free",
-          "de",
-          "dee",
-          "die",
-          "djie",
+          "rie",
           "drie",
           "dri",
           "drih",
-          "driee",
+          "tree",
+          "free",
         ].includes(r)
       ) {
         extraCandidates.push(
@@ -294,12 +250,10 @@ export function isGoodEnough(
       if (
         [
           "rum",
-          "trump",
           "dram",
           "dramm",
           "drumm",
-          "druse",
-          "druc",
+          "trump",
         ].includes(r)
       ) {
         extraCandidates.push(
@@ -327,7 +281,6 @@ export function isGoodEnough(
           "naaien",
           "ryan",
           "brian",
-          "draaien",
         ].includes(r)
       ) {
         extraCandidates.push(
@@ -351,12 +304,11 @@ export function isGoodEnough(
       return true;
     }
 
-    // speciale woorden
+    // speciale fixes
     if (
       t === "drie" &&
       (
         r === "3" ||
-        r === "drie" ||
         r === "rie" ||
         r.startsWith("dri")
       )
@@ -367,9 +319,9 @@ export function isGoodEnough(
     if (
       t === "drum" &&
       (
-        r === "drum" ||
         r === "rum" ||
-        r.startsWith("dru")
+        r.startsWith("dru") ||
+        r.startsWith("dra")
       )
     ) {
       return true;
@@ -379,17 +331,6 @@ export function isGoodEnough(
       t === "draad" &&
       (
         r === "raad" ||
-        r === "draad" ||
-        r.startsWith("dra")
-      )
-    ) {
-      return true;
-    }
-
-    if (
-      t === "draak" &&
-      (
-        r === "raak" ||
         r.startsWith("dra")
       )
     ) {
@@ -519,13 +460,9 @@ export function useRecognition() {
 
       rec.lang = "nl-NL";
 
-      // Korte directe herkenning
+      // ── BELANGRIJK ──────────────────────────────────
       rec.continuous = true;
-
-      // Geen halve woorden
       rec.interimResults = true;
-
-      // Meer alternatieven
       rec.maxAlternatives = 15;
 
       rec.onstart = () => {
@@ -597,9 +534,13 @@ export function useRecognition() {
           transcriptList
         );
 
+        // ── Alleen eerste transcript gebruiken ─────────
+        const firstTranscript =
+          transcriptList[0] || "";
+
         let bestTranscript = "";
 
-        for (const t of transcriptList) {
+        for (const t of [firstTranscript]) {
 
           if (
             isGoodEnough(
@@ -629,29 +570,6 @@ export function useRecognition() {
             bestTranscript = t;
           }
         }
-
-        // fail alleen op final
-        const lastResult =
-          e.results[
-            e.results.length - 1
-          ];
-
-        if (
-          lastResult?.isFinal
-        ) {
-
-          resultFired = true;
-
-          listeningRef.current =
-            false;
-
-          setListening(false);
-
-          onResult(
-            false,
-            bestTranscript
-          );
-        }
       };
 
       rec.onerror = () => {
@@ -675,7 +593,15 @@ export function useRecognition() {
 
         if (!resultFired) {
 
-          onResult(false, "");
+          setTimeout(() => {
+
+            if (resultFired) {
+              return;
+            }
+
+            onResult(false, "");
+
+          }, 700);
         }
       };
 
