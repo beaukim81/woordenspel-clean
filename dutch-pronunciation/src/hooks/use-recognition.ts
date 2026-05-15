@@ -622,19 +622,20 @@ console.log(
           const confidence =
             item.confidence;
 
-isGoodEnough(
-  t,
-  targetWord
-) ||
-isGoodEnough(
-  t,
-  "zeg " + targetWord
-) ||
-isGoodEnough(
-  t,
-  "het woord " + targetWord
-)
-          ) {
+if (
+  isGoodEnough(
+    t,
+    targetWord
+  ) ||
+  isGoodEnough(
+    t,
+    "zeg " + targetWord
+  ) ||
+  isGoodEnough(
+    t,
+    "het woord " + targetWord
+  )
+) {
 
             resultFired = true;
 
