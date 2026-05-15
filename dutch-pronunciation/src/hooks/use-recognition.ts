@@ -604,10 +604,13 @@ transcripts.push({
           targetWord
         );
 
-        console.log(
-          "TRANSCRIPTS:",
-          transcripts
-        );
+console.log(
+  JSON.stringify(
+    transcripts,
+    null,
+    2
+  )
+);
 
         let bestTranscript = "";
 
