@@ -9,7 +9,8 @@ export type Difficulty =
   | 'st'
   | 'dr'
   | 'sl'
-  | 'tw';
+  | 'tw'
+  | 'str';
 
 export interface WordData {
   word: string;
