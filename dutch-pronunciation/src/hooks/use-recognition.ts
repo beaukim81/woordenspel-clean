@@ -94,12 +94,6 @@ export function isGoodEnough(
 ): boolean {
 
   const t = normalize(target);
-const strippedRecognized =
-  normalize(recognized)
-.replace(/^de\s+/, "")
-.replace(/^het\s+/, "")
-.replace(/^een\s+/, "")
-.replace(/^woord\s+/, "");
 
   if (!t) {
     return false;
@@ -110,31 +104,10 @@ const strippedRecognized =
     .map(normalize)
     .filter(Boolean);
 
-const candidates = [
-  normalize(recognized),
-strippedRecognized,
-  ...parts,
-];
-
-const joinedCandidates: string[] = [];
-
-for (let i = 0; i < parts.length; i++) {
-
-  const current =
-    parts[i];
-
-  const next =
-    parts[i + 1];
-
-  if (current && next) {
-
-    joinedCandidates.push(
-      normalize(
-        current + next
-      )
-    );
-  }
-}
+  const candidates = [
+    normalize(recognized),
+    ...parts,
+  ];
 
   const extraCandidates: string[] = [];
 
@@ -346,11 +319,10 @@ for (let i = 0; i < parts.length; i++) {
     }
   }
 
-const allCandidates = [
-  ...candidates,
-  ...joinedCandidates,
-  ...extraCandidates,
-];
+  const allCandidates = [
+    ...candidates,
+    ...extraCandidates,
+  ];
 
   for (const r of allCandidates) {
 
@@ -537,7 +509,7 @@ export function useRecognition() {
       rec.lang = "nl-NL";
       rec.continuous = true;
       rec.interimResults = true;
-      rec.maxAlternatives = 25;
+      rec.maxAlternatives = 15;
 
       rec.onstart = () => {
 
@@ -591,10 +563,18 @@ export function useRecognition() {
               cleaned.length > 0
             ) {
 
-transcripts.push({
-  text: cleaned,
-  confidence,
-});
+              const firstWord =
+                cleaned
+                  .split(/\s+/)[0]
+                  ?.trim();
+
+              if (firstWord) {
+
+                transcripts.push({
+                  text: firstWord,
+                  confidence,
+                });
+              }
             }
           }
         }
@@ -604,15 +584,10 @@ transcripts.push({
           targetWord
         );
 
-console.log(
-  JSON.stringify(
-    transcripts,
-    null,
-    2
-  )
-);
-
-        let bestTranscript = "";
+        console.log(
+          "TRANSCRIPTS:",
+          transcripts
+        );
 
         for (const item of transcripts) {
 
@@ -622,20 +597,12 @@ console.log(
           const confidence =
             item.confidence;
 
-if (
-  isGoodEnough(
-    t,
-    targetWord
-  ) ||
-  isGoodEnough(
-    t,
-    "zeg " + targetWord
-  ) ||
-  isGoodEnough(
-    t,
-    "het woord " + targetWord
-  )
-) {
+          if (
+            isGoodEnough(
+              t,
+              targetWord
+            )
+          ) {
 
             resultFired = true;
 
@@ -653,13 +620,6 @@ if (
             );
 
             return;
-          }
-
-          if (
-            t.length >
-            bestTranscript.length
-          ) {
-            bestTranscript = t;
           }
         }
       };
