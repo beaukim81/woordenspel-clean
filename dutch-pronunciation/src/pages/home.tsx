@@ -16,8 +16,6 @@ import {
   ACHIEVEMENTS,
 } from "@/lib/achievements";
 
-import { avatarForColor } from "@/pages/profile-select";
-
 import egg from "@/assets/mascots/egg.png";
 import babyDragon from "@/assets/mascots/baby-dragon.png";
 import youngDragon from "@/assets/mascots/young-dragon.png";
@@ -271,7 +269,6 @@ export default function Home() {
     childName,
     startSession,
     setDifficulty,
-    avatarColor,
   } = useGameStore();
 
   const level = getLevelFromXP(xp);
@@ -378,42 +375,6 @@ export default function Home() {
             <AnimatedNumber value={coins} />
           </span>
         </motion.div>
-
-        {(() => {
-          const av =
-            avatarForColor(avatarColor);
-
-          return (
-            <motion.button
-              animate={{
-                y: [0, -10, 0],
-                rotate: [0, -4, 4, 0],
-              }}
-              transition={{
-                duration: 3.2,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() =>
-                setLocation("/settings")
-              }
-              className="w-16 h-16 rounded-2xl border-2 border-white/25 flex items-center
-                justify-center shadow-2xl text-4xl select-none touch-manipulation relative overflow-hidden"
-              style={{
-                boxShadow: `0 0 24px ${av.glow}, 0 8px 20px rgba(0,0,0,0.4)`,
-              }}
-            >
-              <div
-                className={`absolute inset-0 bg-gradient-to-br ${av.bg}`}
-              />
-
-              <span className="relative z-10">
-                {av.emoji}
-              </span>
-            </motion.button>
-          );
-        })()}
 
         <motion.button
           whileTap={{
