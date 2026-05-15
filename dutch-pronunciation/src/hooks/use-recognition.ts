@@ -27,6 +27,7 @@ interface SpeechResultList {
 
   [index: number]: {
     transcript: string;
+    confidence?: number;
   };
 }
 
@@ -127,7 +128,6 @@ export function isGoodEnough(
     // ── ST support ────────────────────────────────────
     if (isStWord) {
 
-      // stop
       if (
         [
           "stap",
@@ -143,7 +143,6 @@ export function isGoodEnough(
         );
       }
 
-      // ster
       if (
         [
           "ter",
@@ -156,7 +155,6 @@ export function isGoodEnough(
         );
       }
 
-      // steen
       if (
         [
           "teen",
@@ -173,7 +171,6 @@ export function isGoodEnough(
     // ── DR support ────────────────────────────────────
     if (isDrWord) {
 
-      // D wordt soms weggeslikt
       if (
         r.startsWith("r") &&
         r.length >= 2
@@ -183,7 +180,6 @@ export function isGoodEnough(
         );
       }
 
-      // droom
       if (
         [
           "room",
@@ -199,7 +195,6 @@ export function isGoodEnough(
         );
       }
 
-      // druif
       if (
         [
           "drive",
@@ -218,7 +213,6 @@ export function isGoodEnough(
         );
       }
 
-      // draak
       if (
         [
           "raak",
@@ -237,7 +231,6 @@ export function isGoodEnough(
         );
       }
 
-      // draad
       if (
         [
           "raad",
@@ -250,7 +243,6 @@ export function isGoodEnough(
         );
       }
 
-      // dragen
       if (
         [
           "vragen",
@@ -263,7 +255,6 @@ export function isGoodEnough(
         );
       }
 
-      // drop
       if (
         [
           "rob",
@@ -278,7 +269,6 @@ export function isGoodEnough(
         );
       }
 
-      // draven
       if (
         [
           "draven",
@@ -294,7 +284,6 @@ export function isGoodEnough(
         );
       }
 
-      // drum
       if (
         [
           "rum",
@@ -309,7 +298,6 @@ export function isGoodEnough(
         );
       }
 
-      // drank
       if (
         [
           "rank",
@@ -321,7 +309,6 @@ export function isGoodEnough(
         );
       }
 
-      // draaien
       if (
         [
           "raai",
@@ -347,12 +334,10 @@ export function isGoodEnough(
 
     if (!r) continue;
 
-    // exact
     if (r === t) {
       return true;
     }
 
-    // ── stop special fix ──────────────────────────────
     if (
       t === "stop" &&
       (
@@ -365,7 +350,6 @@ export function isGoodEnough(
       return true;
     }
 
-    // ── draven ────────────────────────────────────────
     if (
       t === "draven" &&
       (
@@ -377,7 +361,6 @@ export function isGoodEnough(
       return true;
     }
 
-    // ── drum ──────────────────────────────────────────
     if (
       t === "drum" &&
       (
@@ -389,7 +372,6 @@ export function isGoodEnough(
       return true;
     }
 
-    // ── draad ─────────────────────────────────────────
     if (
       t === "draad" &&
       (
@@ -400,7 +382,6 @@ export function isGoodEnough(
       return true;
     }
 
-    // ── draak ─────────────────────────────────────────
     if (
       t === "draak" &&
       (
@@ -411,7 +392,6 @@ export function isGoodEnough(
       return true;
     }
 
-    // contains
     if (
       r.length >= 4 &&
       (
@@ -422,7 +402,6 @@ export function isGoodEnough(
       return true;
     }
 
-    // prefix
     const prefix = t.slice(
       0,
       Math.max(
@@ -440,7 +419,6 @@ export function isGoodEnough(
       return true;
     }
 
-    // fuzzy
     let maxDist = 1;
 
     if (t.length >= 6) {
@@ -493,7 +471,8 @@ function getSpeechRecognitionClass():
 
 type OnResult = (
   matched: boolean,
-  transcript: string
+  transcript: string,
+  confidence: number
 ) => void;
 
 // ── Hook ───────────────────────────────────────────────────────────
@@ -556,8 +535,10 @@ export function useRecognition() {
         e: SpeechResultEvent
       ) => {
 
-        const transcripts =
-          new Set<string>();
+        const transcripts: {
+          text: string;
+          confidence: number;
+        }[] = [];
 
         for (
           let ri = 0;
@@ -574,10 +555,19 @@ export function useRecognition() {
             ai++
           ) {
 
+            const alternative =
+              result[ai];
+
             const cleaned =
-              result[ai]
+              alternative
                 .transcript
                 .trim();
+
+            const confidence =
+              typeof alternative.confidence ===
+              "number"
+                ? alternative.confidence
+                : 0;
 
             if (
               cleaned.length > 0
@@ -590,16 +580,17 @@ export function useRecognition() {
 
               if (firstWord) {
 
-                transcripts.add(
-                  firstWord
-                );
+                transcripts.push({
+                  text: firstWord,
+                  confidence,
+                });
               }
             }
           }
         }
 
         const transcriptList =
-          Array.from(transcripts);
+          transcripts;
 
         console.log(
           "TARGET:",
@@ -611,13 +602,21 @@ export function useRecognition() {
           transcriptList
         );
 
-        // Alleen eerste transcript gebruiken
         const firstTranscript =
-          transcriptList[0] || "";
+          transcriptList[0] ?? {
+            text: "",
+            confidence: 0,
+          };
 
         let bestTranscript = "";
 
-        for (const t of [firstTranscript]) {
+        for (const item of [firstTranscript]) {
+
+          const t =
+            item.text;
+
+          const confidence =
+            item.confidence;
 
           if (
             isGoodEnough(
@@ -635,7 +634,11 @@ export function useRecognition() {
 
             rec.stop();
 
-            onResult(true, t);
+            onResult(
+              true,
+              t,
+              confidence
+            );
 
             return;
           }
@@ -658,7 +661,11 @@ export function useRecognition() {
 
         setListening(false);
 
-        onResult(false, "");
+        onResult(
+          false,
+          "",
+          0
+        );
       };
 
       rec.onend = () => {
@@ -676,7 +683,11 @@ export function useRecognition() {
               return;
             }
 
-            onResult(false, "");
+            onResult(
+              false,
+              "",
+              0
+            );
 
           }, 700);
         }
