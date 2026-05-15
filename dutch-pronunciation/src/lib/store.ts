@@ -94,10 +94,10 @@ export const PRELOADED_WORDS: WordData[] = [
   { word: "slurpen",  emoji: "🥤", cluster: "sl" },
 
   // ── tw ─────────────────────────────────────────────
-  { word: "twee",     emoji: "✌️", cluster: "tw" },
+  { word: "twin",     emoji: "👯", cluster: "tw" },
   { word: "twijg",    emoji: "🌿", cluster: "tw" },
-  { word: "twaalf",   emoji: "🕛", cluster: "tw" },
-  { word: "twintig",  emoji: "🔢", cluster: "tw" },
+  { word: "tweekop",   emoji: "👥", cluster: "tw" },
+  { word: "twink",  emoji: "🌟", cluster: "tw" },
   { word: "twist",    emoji: "🌪️", cluster: "tw" },
   { word: "tweeling", emoji: "👯", cluster: "tw" },
   { word: "twijfel",  emoji: "🤔", cluster: "tw" },
