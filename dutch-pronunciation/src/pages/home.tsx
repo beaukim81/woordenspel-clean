@@ -112,6 +112,29 @@ const CLUSTER_OPTIONS: {
     cardBorder: "border-purple-500/35",
     hint: "Twee · Twijg · Tweeling",
   },
+  {
+  cluster:"str",
+  difficulty:"str",
+  label:"STR",
+  gradient:"from-fuchsia-500 to-pink-600",
+  border:"border-b-[5px] border-fuchsia-800",
+  glow:"0 6px 24px rgba(217,70,239,0.45)",
+  cardBg:"bg-fuchsia-500/12",
+  cardBorder:"border-fuchsia-500/35",
+  hint:"Straat · Strand · Stroom"
+},
+
+{
+  cluster:"tr",
+  difficulty:"tr",
+  label:"TR",
+  gradient:"from-cyan-500 to-sky-600",
+  border:"border-b-[5px] border-cyan-800",
+  glow:"0 6px 24px rgba(6,182,212,0.45)",
+  cardBg:"bg-cyan-500/12",
+  cardBorder:"border-cyan-500/35",
+  hint:"Trein · Trap · Tractor"
+},
 ];
 
 const BG_STARS = Array.from({ length: 16 }, (_, i) => ({
@@ -603,51 +626,71 @@ export default function Home() {
           Kies je klanken
         </div>
 
-        <div
-          role="radiogroup"
-          aria-label="Kies klankgroep"
-          className="flex flex-col gap-2"
-        >
-          <div className="grid grid-cols-4 gap-2">
-            {CLUSTER_OPTIONS.slice(0, 4).map(
-              (opt) => (
-                <ClusterBtn
-                  key={opt.cluster}
-                  opt={opt}
-                  active={
-                    difficulty ===
-                    opt.difficulty
-                  }
-                  onSelect={() =>
-                    setDifficulty(
-                      opt.difficulty
-                    )
-                  }
-                />
-              )
-            )}
-          </div>
+<div
+  role="radiogroup"
+  aria-label="Kies klankgroep"
+  className="flex flex-col gap-2"
+>
+  <div className="grid grid-cols-3 gap-2">
+    {CLUSTER_OPTIONS.slice(0, 3).map(
+      (opt) => (
+        <ClusterBtn
+          key={opt.cluster}
+          opt={opt}
+          active={
+            difficulty ===
+            opt.difficulty
+          }
+          onSelect={() =>
+            setDifficulty(
+              opt.difficulty
+            )
+          }
+        />
+      )
+    )}
+  </div>
 
-          <div className="grid grid-cols-3 gap-2">
-            {CLUSTER_OPTIONS.slice(4).map(
-              (opt) => (
-                <ClusterBtn
-                  key={opt.cluster}
-                  opt={opt}
-                  active={
-                    difficulty ===
-                    opt.difficulty
-                  }
-                  onSelect={() =>
-                    setDifficulty(
-                      opt.difficulty
-                    )
-                  }
-                />
-              )
-            )}
-          </div>
-        </div>
+  <div className="grid grid-cols-3 gap-2">
+    {CLUSTER_OPTIONS.slice(3, 6).map(
+      (opt) => (
+        <ClusterBtn
+          key={opt.cluster}
+          opt={opt}
+          active={
+            difficulty ===
+            opt.difficulty
+          }
+          onSelect={() =>
+            setDifficulty(
+              opt.difficulty
+            )
+          }
+        />
+      )
+    )}
+  </div>
+
+  <div className="grid grid-cols-3 gap-2">
+    {CLUSTER_OPTIONS.slice(6, 9).map(
+      (opt) => (
+        <ClusterBtn
+          key={opt.cluster}
+          opt={opt}
+          active={
+            difficulty ===
+            opt.difficulty
+          }
+          onSelect={() =>
+            setDifficulty(
+              opt.difficulty
+            )
+          }
+        />
+      )
+    )}
+  </div>
+</div>
 
         <AnimatePresence mode="wait">
           <motion.div
