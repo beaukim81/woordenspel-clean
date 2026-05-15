@@ -86,7 +86,8 @@ function normalize(
     )
     .replace(
       /[^a-z0-9]/g,
-      "");
+      ""
+    );
 }
 
 // ── Matching logic ─────────────────────────────────────────────────
@@ -172,6 +173,7 @@ export function isGoodEnough(
           "home",
           "droem",
           "droam",
+          "chrome",
         ].includes(r)
       ) {
         extraCandidates.push(
@@ -214,6 +216,7 @@ export function isGoodEnough(
           "draek",
           "draeck",
           "draken",
+          "drague",
         ].includes(r)
       ) {
         extraCandidates.push(
@@ -277,6 +280,9 @@ export function isGoodEnough(
           "die",
           "djie",
           "drie",
+          "dri",
+          "drih",
+          "driee",
         ].includes(r)
       ) {
         extraCandidates.push(
@@ -289,6 +295,11 @@ export function isGoodEnough(
         [
           "rum",
           "trump",
+          "dram",
+          "dramm",
+          "drumm",
+          "druse",
+          "druc",
         ].includes(r)
       ) {
         extraCandidates.push(
@@ -317,6 +328,7 @@ export function isGoodEnough(
           "ryan",
           "brian",
           "draaien",
+          "draaien",
         ].includes(r)
       ) {
         extraCandidates.push(
@@ -340,7 +352,7 @@ export function isGoodEnough(
       return true;
     }
 
-    // ── Speciale korte DR woorden ────────────────────
+    // ── Speciale woorden ──────────────────────────────
     if (
       t === "drie" &&
       (
@@ -421,7 +433,6 @@ export function isGoodEnough(
       maxDist = 2;
     }
 
-    // DR woorden moeilijker
     if (t.startsWith("dr")) {
       maxDist += 1;
     }
@@ -486,7 +497,7 @@ export function useRecognition() {
     !!getSpeechRecognitionClass();
 
   const listen = useCallback(
-    (
+    async (
       onResult: OnResult,
       targetWord: string
     ) => {
@@ -509,13 +520,13 @@ export function useRecognition() {
 
       rec.lang = "nl-NL";
 
-      // Eén woord per beurt
-      rec.continuous = false;
+      // Meer tijd om korte woorden te horen
+      rec.continuous = true;
 
-      // Geen halve woorden
-      rec.interimResults = false;
+      // Browser mag blijven verfijnen
+      rec.interimResults = true;
 
-      // Meerdere alternatieven
+      // Meer alternatieven
       rec.maxAlternatives = 8;
 
       rec.onstart = () => {
@@ -535,40 +546,40 @@ export function useRecognition() {
         const transcripts =
           new Set<string>();
 
-        const lastResult =
-          e.results[
-            e.results.length - 1
-          ];
-
-        if (!lastResult) {
-          return;
-        }
-
         for (
-          let ai = 0;
-          ai < lastResult.length;
-          ai++
+          let ri = 0;
+          ri < e.results.length;
+          ri++
         ) {
 
-          const cleaned =
-            lastResult[ai]
-              .transcript
-              .trim();
+          const result =
+            e.results[ri];
 
-          if (
-            cleaned.length > 0
+          for (
+            let ai = 0;
+            ai < result.length;
+            ai++
           ) {
 
-            // Alleen eerste woord
-            const firstWord =
-              cleaned
-                .split(/\s+/)[0]
-                ?.trim();
+            const cleaned =
+              result[ai]
+                .transcript
+                .trim();
 
-            if (firstWord) {
-              transcripts.add(
-                firstWord
-              );
+            if (
+              cleaned.length > 0
+            ) {
+
+              const firstWord =
+                cleaned
+                  .split(/\s+/)[0]
+                  ?.trim();
+
+              if (firstWord) {
+                transcripts.add(
+                  firstWord
+                );
+              }
             }
           }
         }
@@ -618,33 +629,6 @@ export function useRecognition() {
             bestTranscript = t;
           }
         }
-
-        if (
-          lastResult.isFinal
-        ) {
-
-          setTimeout(() => {
-
-            if (
-              resultFired
-            ) {
-              return;
-            }
-
-            resultFired = true;
-
-            listeningRef.current =
-              false;
-
-            setListening(false);
-
-            onResult(
-              false,
-              bestTranscript
-            );
-
-          }, 450);
-        }
       };
 
       rec.onerror = () => {
@@ -661,20 +645,44 @@ export function useRecognition() {
 
       rec.onend = () => {
 
-        listeningRef.current =
-          false;
+        // succes al verwerkt
+        if (resultFired) {
 
-        setListening(false);
+          listeningRef.current =
+            false;
 
-        if (!resultFired) {
+          setListening(false);
 
-          resultFired = true;
+          return;
+        }
+
+        // browser stopte te snel
+        setTimeout(() => {
+
+          if (resultFired) {
+            return;
+          }
+
+          listeningRef.current =
+            false;
+
+          setListening(false);
 
           onResult(false, "");
-        }
+
+        }, 1200);
       };
 
       try {
+
+        // warmup delay
+        await new Promise(
+          (resolve) =>
+            setTimeout(
+              resolve,
+              180
+            )
+        );
 
         rec.start();
 
