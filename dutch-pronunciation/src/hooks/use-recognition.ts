@@ -117,9 +117,58 @@ export function isGoodEnough(
   const isDrWord =
     t.startsWith("dr");
 
+  const isStWord =
+    t.startsWith("st");
+
   for (const r of candidates) {
 
     if (!r) continue;
+
+    // ── ST support ────────────────────────────────────
+    if (isStWord) {
+
+      // stop
+      if (
+        [
+          "stap",
+          "top",
+          "stok",
+          "stob",
+          "stoppen",
+          "sto",
+        ].includes(r)
+      ) {
+        extraCandidates.push(
+          "stop"
+        );
+      }
+
+      // ster
+      if (
+        [
+          "ter",
+          "sterr",
+          "stehr",
+        ].includes(r)
+      ) {
+        extraCandidates.push(
+          "ster"
+        );
+      }
+
+      // steen
+      if (
+        [
+          "teen",
+          "stean",
+          "stien",
+        ].includes(r)
+      ) {
+        extraCandidates.push(
+          "steen"
+        );
+      }
+    }
 
     // ── DR support ────────────────────────────────────
     if (isDrWord) {
@@ -229,7 +278,7 @@ export function isGoodEnough(
         );
       }
 
-      // ── NIEUW WOORD: DRAVEN ─────────────────────────
+      // draven
       if (
         [
           "draven",
@@ -303,8 +352,20 @@ export function isGoodEnough(
       return true;
     }
 
-    // speciale fixes
+    // ── stop special fix ──────────────────────────────
+    if (
+      t === "stop" &&
+      (
+        r === "stop" ||
+        r === "stap" ||
+        r === "top" ||
+        r.startsWith("sto")
+      )
+    ) {
+      return true;
+    }
 
+    // ── draven ────────────────────────────────────────
     if (
       t === "draven" &&
       (
@@ -316,6 +377,7 @@ export function isGoodEnough(
       return true;
     }
 
+    // ── drum ──────────────────────────────────────────
     if (
       t === "drum" &&
       (
@@ -327,6 +389,7 @@ export function isGoodEnough(
       return true;
     }
 
+    // ── draad ─────────────────────────────────────────
     if (
       t === "draad" &&
       (
@@ -337,6 +400,7 @@ export function isGoodEnough(
       return true;
     }
 
+    // ── draak ─────────────────────────────────────────
     if (
       t === "draak" &&
       (
@@ -383,7 +447,10 @@ export function isGoodEnough(
       maxDist = 2;
     }
 
-    if (t.startsWith("dr")) {
+    if (
+      t.startsWith("dr") ||
+      t.startsWith("st")
+    ) {
       maxDist += 1;
     }
 
@@ -470,7 +537,7 @@ export function useRecognition() {
 
       rec.lang = "nl-NL";
 
-      // ── BELANGRIJK ──────────────────────────────────
+      // ── Beste balans voor kinderen ─────────────────
       rec.continuous = true;
       rec.interimResults = true;
       rec.maxAlternatives = 15;
