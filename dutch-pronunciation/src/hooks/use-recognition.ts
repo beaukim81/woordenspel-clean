@@ -328,7 +328,6 @@ export function isGoodEnough(
           "ryan",
           "brian",
           "draaien",
-          "draaien",
         ].includes(r)
       ) {
         extraCandidates.push(
@@ -347,12 +346,12 @@ export function isGoodEnough(
 
     if (!r) continue;
 
-    // ── Exact ─────────────────────────────────────────
+    // exact
     if (r === t) {
       return true;
     }
 
-    // ── Speciale woorden ──────────────────────────────
+    // speciale woorden
     if (
       t === "drie" &&
       (
@@ -397,7 +396,7 @@ export function isGoodEnough(
       return true;
     }
 
-    // ── Contains ─────────────────────────────────────
+    // contains
     if (
       r.length >= 4 &&
       (
@@ -408,7 +407,7 @@ export function isGoodEnough(
       return true;
     }
 
-    // ── Prefix ───────────────────────────────────────
+    // prefix
     const prefix = t.slice(
       0,
       Math.max(
@@ -426,7 +425,7 @@ export function isGoodEnough(
       return true;
     }
 
-    // ── Fuzzy ────────────────────────────────────────
+    // fuzzy
     let maxDist = 1;
 
     if (t.length >= 6) {
@@ -497,7 +496,7 @@ export function useRecognition() {
     !!getSpeechRecognitionClass();
 
   const listen = useCallback(
-    async (
+    (
       onResult: OnResult,
       targetWord: string
     ) => {
@@ -520,14 +519,14 @@ export function useRecognition() {
 
       rec.lang = "nl-NL";
 
-      // Meer tijd om korte woorden te horen
-      rec.continuous = true;
+      // Korte directe herkenning
+      rec.continuous = false;
 
-      // Browser mag blijven verfijnen
-      rec.interimResults = true;
+      // Geen halve woorden
+      rec.interimResults = false;
 
       // Meer alternatieven
-      rec.maxAlternatives = 8;
+      rec.maxAlternatives = 15;
 
       rec.onstart = () => {
 
@@ -576,6 +575,7 @@ export function useRecognition() {
                   ?.trim();
 
               if (firstWord) {
+
                 transcripts.add(
                   firstWord
                 );
@@ -629,6 +629,29 @@ export function useRecognition() {
             bestTranscript = t;
           }
         }
+
+        // fail alleen op final
+        const lastResult =
+          e.results[
+            e.results.length - 1
+          ];
+
+        if (
+          lastResult?.isFinal
+        ) {
+
+          resultFired = true;
+
+          listeningRef.current =
+            false;
+
+          setListening(false);
+
+          onResult(
+            false,
+            bestTranscript
+          );
+        }
       };
 
       rec.onerror = () => {
@@ -645,44 +668,18 @@ export function useRecognition() {
 
       rec.onend = () => {
 
-        // succes al verwerkt
-        if (resultFired) {
+        listeningRef.current =
+          false;
 
-          listeningRef.current =
-            false;
+        setListening(false);
 
-          setListening(false);
-
-          return;
-        }
-
-        // browser stopte te snel
-        setTimeout(() => {
-
-          if (resultFired) {
-            return;
-          }
-
-          listeningRef.current =
-            false;
-
-          setListening(false);
+        if (!resultFired) {
 
           onResult(false, "");
-
-        }, 1200);
+        }
       };
 
       try {
-
-        // warmup delay
-        await new Promise(
-          (resolve) =>
-            setTimeout(
-              resolve,
-              180
-            )
-        );
 
         rec.start();
 
