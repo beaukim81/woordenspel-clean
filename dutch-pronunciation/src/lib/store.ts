@@ -97,9 +97,73 @@ export const PRELOADED_WORDS: WordData[] = [
   { word: "twaalf",   emoji: "🕛", cluster: "tw" },
   { word: "twintig",  emoji: "🔢", cluster: "tw" },
   { word: "twist",    emoji: "🌪️", cluster: "tw" },
-  { word: "tweet",    emoji: "🐦", cluster: "tw" },
+  { word: "tweeling", emoji: "👯", cluster: "tw" },
   { word: "twijfel",  emoji: "🤔", cluster: "tw" },
+  { word: "twinkel",  emoji: "✨", cluster: "tw" },
+  { word: "twijgen",  emoji: "🌿", cluster: "tw" },
+  { word: "twister",  emoji: "🌪️", cluster: "tw" },
 ];
+
+const CUSTOM_WORD_EMOJIS: Record<
+  string,
+  string
+> = {
+
+  // ── sp ─────────────────────────────────────────────
+  spinnenweb: "🕸️",
+  spuit: "🔫",
+  speelgoed: "🧸",
+  specht: "🐦",
+  sponsor: "🏅",
+  spalk: "🩹",
+
+  // ── bl ─────────────────────────────────────────────
+  blaffen: "🐶",
+  blender: "🥤",
+  blikje: "🥫",
+  blaren: "🍂",
+  blouse: "👚",
+  bloemkool: "🥦",
+
+  // ── br ─────────────────────────────────────────────
+  broccoli: "🥦",
+  brommer: "🛵",
+  bruid: "👰",
+  bruidsjurk: "👗",
+  brontosaurus: "🦕",
+  brievenbus: "📮",
+
+  // ── st ─────────────────────────────────────────────
+  stempel: "📬",
+  streep: "➖",
+  strand: "🏖️",
+  struik: "🌳",
+  stropdas: "👔",
+  stuiterbal: "⚽",
+
+  // ── dr ─────────────────────────────────────────────
+  dribbel: "⚽",
+  drone: "🚁",
+  druppel: "💧",
+  drijven: "🛟",
+  drakenkop: "🐲",
+  dressoir: "🪵",
+
+  // ── sl ─────────────────────────────────────────────
+  slippers: "🩴",
+  slush: "🥤",
+  slinger: "🎉",
+  slot: "🔒",
+  slurf: "🐘",
+  sluier: "👰",
+
+  // ── tw ─────────────────────────────────────────────
+  twitter: "🐦",
+  twisterspel: "🌀",
+  twilight: "🌙",
+  twijgje: "🌿",
+  twinkelster: "✨",
+};
 
 export function detectCluster(
   word: string
@@ -136,22 +200,30 @@ export function customWordToWordData(
   word: string
 ): WordData | null {
 
+  const cleanWord =
+    word
+      .toLowerCase()
+      .trim();
+
   const cluster =
-    detectCluster(word);
+    detectCluster(cleanWord);
 
   if (!cluster) {
     return null;
   }
 
+  const emoji =
+    CUSTOM_WORD_EMOJIS[
+      cleanWord
+    ] ??
+    CLUSTER_EMOJI[
+      cluster
+    ] ??
+    "⭐";
+
   return {
-    word: word
-      .toLowerCase()
-      .trim(),
-
-    emoji:
-      CLUSTER_EMOJI[cluster] ??
-      "⭐",
-
+    word: cleanWord,
+    emoji,
     cluster,
   };
 }
@@ -208,8 +280,13 @@ interface GameState {
   wordErrors: Record<string, number>;
   session: SessionState | null;
 
-  addCoins: (amount: number) => void;
-  addXP: (amount: number) => void;
+  addCoins: (
+    amount: number
+  ) => void;
+
+  addXP: (
+    amount: number
+  ) => void;
 
   setDifficulty: (
     diff: Difficulty
@@ -469,7 +546,7 @@ export const useGameStore =
       {
         name: 'dutch-game-storage',
 
-        version: 7,
+        version: 8,
 
         storage:
           createJSONStorage(() => ({
