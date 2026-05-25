@@ -96,7 +96,7 @@ export const PRELOADED_WORDS: WordData[] = [
   // ── tw ─────────────────────────────────────────────
   { word: "twin",     emoji: "👯", cluster: "tw" },
   { word: "twijg",    emoji: "🌿", cluster: "tw" },
-  { word: "tweekop",   emoji: "👥", cluster: "tw" },
+  { word: "twee",      emoji: "2️⃣", cluster: "tw" },
   { word: "twink",  emoji: "🌟", cluster: "tw" },
   { word: "twist",    emoji: "🌪️", cluster: "tw" },
   { word: "tweeling", emoji: "👯", cluster: "tw" },
