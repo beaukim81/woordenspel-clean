@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { checkNewAchievements } from './achievements';
 
 export type Difficulty =
   | 'sp'
@@ -320,7 +319,6 @@ export interface SessionState {
   completedWords: string[];
   leveledUp: boolean;
   startLevel: number;
-  achievementsUnlockedInSession: string[];
 }
 
 interface GameState {
@@ -331,7 +329,6 @@ interface GameState {
   customWords: string[];
   childName: string;
   totalWordsCompleted: number;
-  achievements: string[];
   wordErrors: Record<string, number>;
   session: SessionState | null;
 
@@ -401,7 +398,6 @@ const defaultState = {
   customWords: [] as string[],
   childName: '',
   totalWordsCompleted: 0,
-  achievements: [] as string[],
   wordErrors: {} as Record<string, number>,
   session: null,
 };
@@ -477,7 +473,6 @@ export const useGameStore =
               leveledUp: false,
               startLevel:
                 getLevelFromXP(xp),
-              achievementsUnlockedInSession: [],
             },
           });
         },
@@ -519,24 +514,10 @@ export const useGameStore =
           const newTotal =
             state.totalWordsCompleted + 1;
 
-          const newlyUnlocked =
-            checkNewAchievements(
-              newTotal,
-              newCoins,
-              newLevel,
-              state.difficulty,
-              state.achievements,
-            );
-
           set((s) => ({
             coins: newCoins,
             xp: newXP,
             totalWordsCompleted: newTotal,
-
-            achievements: [
-              ...s.achievements,
-              ...newlyUnlocked,
-            ],
 
             session: s.session
               ? {
@@ -565,11 +546,6 @@ export const useGameStore =
                     s.session.leveledUp ||
                     newLevel > oldLevel,
 
-                  achievementsUnlockedInSession: [
-                    ...s.session
-                      .achievementsUnlockedInSession,
-                    ...newlyUnlocked,
-                  ],
                 }
               : null,
           }));
@@ -658,9 +634,6 @@ export const useGameStore =
 
           totalWordsCompleted:
             state.totalWordsCompleted,
-
-          achievements:
-            state.achievements,
 
           wordErrors:
             state.wordErrors,

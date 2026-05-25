@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star } from "lucide-react";
 import { useGameStore, getLevelFromXP } from "@/lib/store";
-import { getLevelTitle, ACHIEVEMENTS } from "@/lib/achievements";
+import { getLevelTitle } from "@/lib/achievements";
 import { useCountUp } from "@/hooks/use-count-up";
 
 const HEADLINES = ["Geweldig!", "Fantastisch!", "Super goed!", "Bravo!", "Toppertje!", "Wauw!"];
@@ -55,7 +55,6 @@ export default function Reward() {
     sessionCoins:        session?.sessionCoins        ?? 0,
     sessionXP:           session?.sessionXP           ?? 0,
     leveledUp:           session?.leveledUp           ?? false,
-    sessionAchievements: session?.achievementsUnlockedInSession ?? [] as string[],
     hadSession:          !!session,
   }).current;
 
@@ -211,43 +210,6 @@ export default function Reward() {
           </div>
         </div>
       </motion.div>
-
-      {/* ── Session achievements ─────────────────── */}
-      <AnimatePresence>
-        {snap.sessionAchievements.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.52 }}
-            className="w-full max-w-sm mb-4 shrink-0"
-          >
-            <div className="text-white/30 text-xs font-black uppercase tracking-widest text-center mb-3">
-              Prestaties behaald
-            </div>
-            <div className="flex flex-wrap gap-2 justify-center">
-              {snap.sessionAchievements.map((id, idx) => {
-                const a = ACHIEVEMENTS[id];
-                if (!a) return null;
-                return (
-                  <motion.div
-                    key={id}
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: 0.58 + idx * 0.08, type: "spring", stiffness: 320, damping: 20 }}
-                    className="flex items-center gap-2 bg-yellow-400/12 border border-yellow-400/25 rounded-2xl px-3 py-2"
-                  >
-                    <span className="text-xl select-none" aria-hidden="true">{a.icon}</span>
-                    <div>
-                      <div className="font-black text-yellow-300 text-xs leading-tight">{a.label}</div>
-                      <div className="text-white/35 text-xs leading-tight">{a.desc}</div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* ── Level-up banner ──────────────────────── */}
       <AnimatePresence>

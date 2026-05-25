@@ -6,7 +6,6 @@ import { useGameStore, getSessionWords, getLevelFromXP, type WordData } from "@/
 import { useSpeech } from "@/hooks/use-speech";
 import { useRecognition } from "@/hooks/use-recognition";
 import { playCoinSound } from "@/hooks/use-sound";
-import { ACHIEVEMENTS } from "@/lib/achievements";
 
 const COINS_PER_WORD = 1;
 const XP_PER_WORD    = 5;
@@ -47,31 +46,6 @@ function burst(): Particle[] {
   }));
 }
 
-function AchievementToast({ id, onDone }: { id: string; onDone: () => void }) {
-  const a = ACHIEVEMENTS[id];
-  useEffect(() => { const t = setTimeout(onDone, 2800); return () => clearTimeout(t); }, [onDone]);
-  if (!a) return null;
-  return (
-    <motion.div
-      initial={{ y: -100, opacity: 0, scale: 0.85 }}
-      animate={{ y: 0, opacity: 1, scale: 1 }}
-      exit={{ y: -100, opacity: 0, scale: 0.85 }}
-      transition={{ type: "spring", stiffness: 340, damping: 26 }}
-      className="absolute top-3 left-3 right-3 z-50"
-    >
-      <div className="flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl
-        bg-gradient-to-r from-yellow-500 to-amber-500 border-2 border-yellow-300/50">
-        <span className="text-3xl shrink-0">{a.icon}</span>
-        <div className="flex-1 min-w-0">
-          <div className="text-gray-900 font-black text-xs uppercase tracking-wider">Prestatie behaald!</div>
-          <div className="text-gray-900 font-black text-base leading-tight">{a.label}</div>
-        </div>
-        <motion.span animate={{ rotate: [0,15,-15,0] }} transition={{ delay:0.3, duration:0.5 }} className="text-2xl shrink-0">🏆</motion.span>
-      </div>
-    </motion.div>
-  );
-}
-
 export default function Exercise() {
   const [, setLocation] = useLocation();
   const store = useGameStore();
@@ -86,7 +60,6 @@ export default function Exercise() {
   const [encourage, setEncourage]     = useState("");
   const [wordShake, setWordShake]     = useState(false);
   const [noMatch, setNoMatch]         = useState(false);
-  const [toastQueue, setToastQueue]   = useState<string[]>([]);
 
   const { speak, speaking }                               = useSpeech();
   const { listen, cancel: cancelListening, listening,
@@ -101,8 +74,6 @@ const noMatchTimeoutRef    = useRef<number | null>(null);
 
 
   useEffect(() => () => { lockRef.current = false; }, []);
-
-  const seenAchievementsRef = useRef(new Set(session?.achievementsUnlockedInSession ?? []));
 
   const words        = getSessionWords(difficulty, customWords);
   const currentIndex = session?.currentWordIndex ?? 0;
@@ -229,18 +200,6 @@ listen((matched, transcript, confidence) => {
 
 }, [speaking]); // eslint-disable-line
 
-  // Achievement toasts
-  useEffect(() => {
-    const sessionAchievements = session?.achievementsUnlockedInSession ?? [];
-    const newOnes = sessionAchievements.filter(id => !seenAchievementsRef.current.has(id));
-    if (newOnes.length > 0) {
-      newOnes.forEach(id => seenAchievementsRef.current.add(id));
-      setToastQueue(q => [...q, ...newOnes]);
-    }
-  }, [session?.achievementsUnlockedInSession]);
-
-  const dismissToast = useCallback(() => setToastQueue(q => q.slice(1)), []);
-
   /** Shared success handler — called by recognition match OR "Ik deed het!" button */
   function triggerSuccess() {
     if (!currentWord || showSuccess || lockRef.current) return;
@@ -304,11 +263,6 @@ listen((matched, transcript, confidence) => {
 
   return (
     <div className="min-h-screen min-h-[100dvh] w-full flex flex-col items-center bg-background px-4 pt-5 pb-6 relative overflow-hidden">
-
-      {/* Achievement toasts */}
-      <AnimatePresence>
-        {toastQueue[0] && <AchievementToast key={toastQueue[0]} id={toastQueue[0]} onDone={dismissToast} />}
-      </AnimatePresence>
 
       {/* ── Header ──────────────────────────────── */}
       <motion.div

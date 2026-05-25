@@ -1,7 +1,7 @@
 import { useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion, useSpring, useTransform, AnimatePresence } from "framer-motion";
-import { Settings, Trophy } from "lucide-react";
+import { Settings } from "lucide-react";
 
 import {
   useGameStore,
@@ -13,7 +13,6 @@ import {
 import {
   getLevelTitle,
   nextMilestoneLevel,
-  ACHIEVEMENTS,
 } from "@/lib/achievements";
 
 import egg from "@/assets/mascots/egg.png";
@@ -265,7 +264,6 @@ export default function Home() {
     coins,
     xp,
     difficulty,
-    achievements,
     childName,
     startSession,
     setDifficulty,
@@ -299,9 +297,6 @@ export default function Home() {
     CLUSTER_OPTIONS.find(
       (o) => o.difficulty === difficulty
     ) ?? CLUSTER_OPTIONS[0];
-
-  const recentAchievements =
-    achievements.slice(-4);
 
   function handlePlay() {
     startSession();
@@ -731,76 +726,6 @@ export default function Home() {
         </span>
       </motion.button>
 
-      {recentAchievements.length > 0 && (
-        <motion.div
-          initial={{
-            opacity: 0,
-            y: 14,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{ delay: 0.3 }}
-          className="w-full max-w-sm mt-5 shrink-0"
-        >
-          <div className="flex items-center gap-2 mb-2.5">
-            <Trophy className="w-3.5 h-3.5 text-yellow-400/50" />
-
-            <span className="text-white/30 text-xs font-black uppercase tracking-widest">
-              Prestaties
-            </span>
-          </div>
-
-          <div className="flex gap-2 flex-wrap">
-            {recentAchievements.map((id) => {
-              const a =
-                ACHIEVEMENTS[id];
-
-              if (!a) {
-                return null;
-              }
-
-              return (
-                <motion.div
-                  key={id}
-                  initial={{
-                    scale: 0,
-                    opacity: 0,
-                  }}
-                  animate={{
-                    scale: 1,
-                    opacity: 1,
-                  }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 320,
-                    damping: 22,
-                  }}
-                  className="flex items-center gap-1.5 bg-white/[0.07] border border-white/[0.10] rounded-2xl px-3 py-1.5"
-                  title={a.desc}
-                >
-                  <span className="text-sm select-none">
-                    {a.icon}
-                  </span>
-
-                  <span className="text-white/55 font-bold text-xs">
-                    {a.label}
-                  </span>
-                </motion.div>
-              );
-            })}
-
-            {achievements.length > 4 && (
-              <div className="flex items-center px-3 py-1.5 rounded-2xl bg-white/[0.04] border border-white/[0.08]">
-                <span className="text-white/30 font-bold text-xs">
-                  +{achievements.length - 4} meer
-                </span>
-              </div>
-            )}
-          </div>
-        </motion.div>
-      )}
     </div>
   );
 }

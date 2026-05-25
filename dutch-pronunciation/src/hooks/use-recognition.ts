@@ -88,6 +88,37 @@ function normalize(
     );
 }
 
+const RECOGNITION_ALIASES: Record<
+  string,
+  string[]
+> = {
+  twee: [
+    "2",
+    "tweeen",
+  ],
+  drie: [
+    "3",
+    "rie",
+    "tree",
+    "tri",
+  ],
+  twaalf: [
+    "12",
+    "twalf",
+    "twalef",
+  ],
+};
+
+function getAliases(
+  value: string
+): string[] {
+
+  return [
+    value,
+    ...(RECOGNITION_ALIASES[value] ?? []),
+  ];
+}
+
 export function isGoodEnough(
   recognized: string,
   target: string
@@ -324,9 +355,23 @@ export function isGoodEnough(
     ...extraCandidates,
   ];
 
+  const targetAliases =
+    getAliases(t);
+
   for (const r of allCandidates) {
 
     if (!r) continue;
+
+    const recognizedAliases =
+      getAliases(r);
+
+    if (
+      recognizedAliases.some((alias) =>
+        targetAliases.includes(alias)
+      )
+    ) {
+      return true;
+    }
 
     if (r === t) {
       return true;
@@ -563,17 +608,23 @@ export function useRecognition() {
               cleaned.length > 0
             ) {
 
-              const firstWord =
-                cleaned
-                  .split(/\s+/)[0]
-                  ?.trim();
+              const transcriptParts = [
+                cleaned,
+                ...cleaned.split(/\s+/),
+              ];
 
-              if (firstWord) {
+              for (const part of transcriptParts) {
 
-                transcripts.push({
-                  text: firstWord,
-                  confidence,
-                });
+                const word =
+                  part.trim();
+
+                if (word) {
+
+                  transcripts.push({
+                    text: word,
+                    confidence,
+                  });
+                }
               }
             }
           }
