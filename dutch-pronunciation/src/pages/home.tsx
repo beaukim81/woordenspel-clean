@@ -107,7 +107,7 @@ const CLUSTER_OPTIONS: {
     glow: "0 6px 24px rgba(168,85,247,0.45)",
     cardBg: "bg-purple-500/12",
     cardBorder: "border-purple-500/35",
-    hint: "Twee · Twijg · Tweeling",
+    hint: "Twix · Twijg · Tweeling",
   },
   {
   cluster:"str",

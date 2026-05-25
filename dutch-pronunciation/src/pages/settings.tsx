@@ -807,7 +807,7 @@ export default function Settings() {
             <span className="text-purple-400">
               tw
             </span>{" "}
-            — twee, twijg,
+            — twix, twijg,
             tweeling…
           </li>
 

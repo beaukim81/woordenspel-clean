@@ -95,7 +95,7 @@ export const PRELOADED_WORDS: WordData[] = [
   // ── tw ─────────────────────────────────────────────
   { word: "twin",     emoji: "👯", cluster: "tw" },
   { word: "twijg",    emoji: "🌿", cluster: "tw" },
-  { word: "twee",      emoji: "2️⃣", cluster: "tw" },
+  { word: "twix",      emoji: "🍫", cluster: "tw" },
   { word: "twink",  emoji: "🌟", cluster: "tw" },
   { word: "twist",    emoji: "🌪️", cluster: "tw" },
   { word: "tweeling", emoji: "👯", cluster: "tw" },
@@ -170,6 +170,7 @@ const CUSTOM_WORD_EMOJIS: Record<
   dribbel: "⚽",
   drone: "🚁",
   druppel: "💧",
+  dreumes: "👶",
   drijven: "🛟",
   draak: "🐲",
   dressoir: "🪵",
@@ -188,6 +189,7 @@ const CUSTOM_WORD_EMOJIS: Record<
   twilight: "🌙",
   twijgje: "🌿",
   twinkelster: "✨",
+  twix: "🍫",
 
   // ── tr ─────────────────────────────────────────────
   trein: "🚂",
@@ -250,14 +252,46 @@ const CLUSTER_EMOJI: Record<
   tr: "🚂",
 };
 
+const LEGACY_WORD_REPLACEMENTS: Record<
+  string,
+  string
+> = {
+  twee: "twix",
+  drie: "dreumes",
+};
+
+function normalizeCustomWords(
+  words: string[]
+): string[] {
+
+  return Array.from(
+    new Set(
+      words
+        .map((word) => {
+          const cleanWord =
+            word
+              .toLowerCase()
+              .trim();
+
+          return (
+            LEGACY_WORD_REPLACEMENTS[
+              cleanWord
+            ] ?? cleanWord
+          );
+        })
+        .filter(Boolean)
+    )
+  );
+}
+
 export function customWordToWordData(
   word: string
 ): WordData | null {
 
   const cleanWord =
-    word
-      .toLowerCase()
-      .trim();
+    normalizeCustomWords([
+      word,
+    ])[0] ?? "";
 
   const cluster =
     detectCluster(cleanWord);
@@ -298,6 +332,12 @@ export function getSessionWords(
     );
 
   const custom = customWords
+    .map((word) =>
+      normalizeCustomWords([
+        word,
+      ])[0]
+    )
+    .filter(Boolean)
     .map(customWordToWordData)
     .filter(
       (w): w is WordData =>
@@ -432,7 +472,12 @@ export const useGameStore =
         setCustomWords: (
           customWords
         ) =>
-          set({ customWords }),
+          set({
+            customWords:
+              normalizeCustomWords(
+                customWords
+              ),
+          }),
 
         setChildName: (
           childName
@@ -580,7 +625,22 @@ export const useGameStore =
       {
         name: 'dutch-game-storage',
 
-        version: 8,
+        version: 9,
+
+        migrate: (
+          persistedState
+        ) => {
+          const state =
+            persistedState as Partial<GameState>;
+
+          return {
+            ...state,
+            customWords:
+              normalizeCustomWords(
+                state.customWords ?? []
+              ),
+          };
+        },
 
         storage:
           createJSONStorage(() => ({
@@ -627,7 +687,9 @@ export const useGameStore =
             state.difficulty,
 
           customWords:
-            state.customWords,
+            normalizeCustomWords(
+              state.customWords
+            ),
 
           childName:
             state.childName,
