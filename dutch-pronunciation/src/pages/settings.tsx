@@ -111,6 +111,9 @@ export default function Settings() {
     setChildName,
     resetProgress,
     wordErrors,
+    clearWordErrors,
+    startSession,
+    setDifficulty,
   } = useGameStore();
 
   const [newWord, setNewWord] = useState("");
@@ -192,6 +195,21 @@ export default function Settings() {
       () => setJustReset(false),
       2400
     );
+  }
+
+  function handlePracticeWord(
+    word: string
+  ) {
+    const wordCluster =
+      detectCluster(word);
+
+    if (!wordCluster) {
+      return;
+    }
+
+    setDifficulty(wordCluster);
+    startSession();
+    setLocation("/exercise");
   }
 
   const grouped = customWords.reduce<
@@ -619,6 +637,141 @@ export default function Settings() {
               bl-, br-, st-,
               dr-, sl-, tw-,
               str- of tr-
+            </div>
+          </div>
+        )}
+      </motion.section>
+
+      {/* LASTIGE WOORDEN */}
+
+      <motion.section
+        initial={{
+          opacity: 0,
+          y: 18,
+        }}
+        animate={{
+          opacity: 1,
+          y: 0,
+        }}
+        transition={{
+          delay: 0.12,
+        }}
+        className="mb-8"
+      >
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-1 h-5 rounded-full bg-yellow-400" />
+
+            <span className="font-black text-white text-base uppercase tracking-widest">
+              Lastige woorden
+            </span>
+          </div>
+
+          {hasErrors && (
+            <button
+              onClick={clearWordErrors}
+              className="shrink-0 px-3 py-2 rounded-2xl bg-white/10 border border-white/15 text-white/50 text-xs font-black"
+            >
+              Wissen
+            </button>
+          )}
+        </div>
+
+        <p className="text-white/40 text-sm font-bold mb-4 ml-3">
+          Woorden waarbij het spel
+          vaker opnieuw liet
+          proberen.
+        </p>
+
+        {hasErrors ? (
+          <div className="rounded-2xl bg-white/[0.06] border border-white/10 p-4">
+            <div className="flex flex-col gap-3">
+              {sortedErrors.map(
+                ([word, count]) => {
+                  const wordCluster =
+                    detectCluster(word);
+
+                  const meta =
+                    wordCluster
+                      ? CLUSTER_META[
+                          wordCluster
+                        ]
+                      : null;
+
+                  const pct =
+                    Math.max(
+                      12,
+                      (count /
+                        maxErrors) *
+                        100
+                    );
+
+                  return (
+                    <div
+                      key={word}
+                      className="rounded-2xl bg-black/15 border border-white/8 p-3"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2">
+                            {meta && (
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${meta.badge}`}
+                              >
+                                {meta.label}
+                              </span>
+                            )}
+
+                            <span className="text-white font-black text-sm truncate">
+                              {word}
+                            </span>
+                          </div>
+
+                          <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+                            <div
+                              className="h-full rounded-full bg-yellow-400"
+                              style={{
+                                width: `${pct}%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="text-right shrink-0">
+                          <div className="text-yellow-300 font-black text-sm">
+                            {count}x
+                          </div>
+
+                          <button
+                            onClick={() =>
+                              handlePracticeWord(
+                                word
+                              )
+                            }
+                            className="mt-1 px-3 py-1.5 rounded-2xl bg-yellow-400/15 border border-yellow-400/25 text-yellow-200 text-xs font-black"
+                          >
+                            Oefen
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-2xl bg-white/[0.04] border border-white/8 px-4 py-6 text-center">
+            <div className="text-white/30 font-bold text-sm">
+              Nog geen lastige
+              woorden opgeslagen
+            </div>
+
+            <div className="text-white/20 text-xs mt-1">
+              Hier verschijnen
+              woorden die vaker
+              opnieuw geoefend
+              worden.
             </div>
           </div>
         )}
