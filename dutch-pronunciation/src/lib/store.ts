@@ -587,6 +587,9 @@ export const useGameStore =
             avatarColor:
               s.avatarColor,
 
+            difficulty:
+              s.difficulty,
+
             customWords:
               s.customWords,
 

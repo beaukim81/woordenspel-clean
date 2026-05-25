@@ -111,7 +111,6 @@ export default function Settings() {
     setChildName,
     resetProgress,
     wordErrors,
-    clearWordErrors,
   } = useGameStore();
 
   const [newWord, setNewWord] = useState("");
@@ -664,20 +663,69 @@ export default function Settings() {
               </p>
             </div>
 
-            <button
-              onClick={() =>
-                setConfirmReset(
-                  true
-                )
-              }
-              className="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-2xl
-                bg-red-500/15 border border-red-500/30 text-red-400"
-            >
-              <RotateCcw className="w-4 h-4" />
+            {confirmReset ? (
+              <div className="shrink-0 flex items-center gap-2">
+                <button
+                  onClick={() =>
+                    setConfirmReset(
+                      false
+                    )
+                  }
+                  className="px-3 py-2.5 rounded-2xl bg-white/10 border border-white/15 text-white/60 text-sm font-black"
+                >
+                  Annuleren
+                </button>
 
-              Reset
-            </button>
+                <button
+                  onClick={handleReset}
+                  className="flex items-center gap-2 px-3 py-2.5 rounded-2xl
+                    bg-red-500/20 border border-red-500/40 text-red-300 text-sm font-black"
+                >
+                  <RotateCcw className="w-4 h-4" />
+
+                  Ja, reset
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() =>
+                  setConfirmReset(
+                    true
+                  )
+                }
+                className="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-2xl
+                  bg-red-500/15 border border-red-500/30 text-red-400"
+              >
+                <RotateCcw className="w-4 h-4" />
+
+                Reset
+              </button>
+            )}
           </div>
+
+          <AnimatePresence>
+            {justReset && (
+              <motion.div
+                initial={{
+                  opacity: 0,
+                  y: -6,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                exit={{
+                  opacity: 0,
+                  y: -6,
+                }}
+                className="mt-4 flex items-center gap-2 text-green-300 text-sm font-black"
+              >
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+
+                Punten zijn gewist.
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </motion.section>
 
