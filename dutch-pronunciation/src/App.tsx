@@ -9,12 +9,14 @@ import Home from "@/pages/home";
 import Exercise from "@/pages/exercise";
 import Reward from "@/pages/reward";
 import Settings from "@/pages/settings";
+import SpeechTest from "@/pages/speech-test";
 
 const PAGE_DEPTH: Record<string, number> = {
   "/": 1,
   "/settings": 2,
   "/exercise": 2,
   "/reward": 3,
+  "/speech-test": 2,
 };
 
 const slideVariants = {
@@ -31,7 +33,6 @@ const slideVariants = {
 
 function AnimatedRoutes() {
   const [location] = useLocation();
-
   const prevLocationRef = useRef(location);
   const directionRef = useRef(0);
 
@@ -59,10 +60,11 @@ function AnimatedRoutes() {
         >
           <ErrorBoundary>
             <Switch location={location}>
-              <Route path="/"         component={Home} />
+              <Route path="/" component={Home} />
               <Route path="/exercise" component={Exercise} />
-              <Route path="/reward"   component={Reward} />
+              <Route path="/reward" component={Reward} />
               <Route path="/settings" component={Settings} />
+              <Route path="/speech-test" component={SpeechTest} />
               <Route component={NotFound} />
             </Switch>
           </ErrorBoundary>
