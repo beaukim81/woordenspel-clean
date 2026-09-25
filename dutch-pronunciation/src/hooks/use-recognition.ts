@@ -82,6 +82,7 @@ interface LastResult {
 
 export function useRecognition() {
   const [listening, setListening] = useState(false);
+  const [starting, setStarting] = useState(false);
   const [lastResult, setLastResult] = useState<LastResult | null>(null);
   const listeningRef = useRef(false);
   const recRef = useRef<SpeechRec | null>(null);
@@ -103,6 +104,7 @@ export function useRecognition() {
     setLastResult(null);
 
     rec.onstart = () => {
+      setStarting(false);
       listeningRef.current = true;
       setListening(true);
     };
@@ -135,6 +137,7 @@ export function useRecognition() {
     };
 
     rec.onerror = () => {
+      setStarting(false);
       resultFired = true;
       listeningRef.current = false;
       setListening(false);
@@ -142,6 +145,7 @@ export function useRecognition() {
     };
 
     rec.onend = () => {
+      setStarting(false);
       listeningRef.current = false;
       setListening(false);
       if (!resultFired) {
@@ -152,8 +156,10 @@ export function useRecognition() {
     };
 
     try {
+      setStarting(true);
       rec.start();
     } catch {
+      setStarting(false);
       listeningRef.current = false;
       setListening(false);
     }
@@ -161,9 +167,10 @@ export function useRecognition() {
 
   const cancel = useCallback(() => {
     recRef.current?.abort();
+    setStarting(false);
     listeningRef.current = false;
     setListening(false);
   }, []);
 
-  return { listen, cancel, listening, supported, lastResult };
+  return { listen, cancel, listening, starting, supported, lastResult };
 }
