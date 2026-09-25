@@ -62,7 +62,7 @@ export default function Exercise() {
   const [noMatch, setNoMatch]         = useState(false);
 
   const { speak, speaking }                               = useSpeech();
-  const { listen, cancel: cancelListening, listening,
+  const { listen, cancel: cancelListening, listening, starting,
           supported: recognitionSupported }               = useRecognition();
 const lockRef              = useRef(false);
 const listenAfterSpeakRef  = useRef(false);
@@ -115,9 +115,7 @@ const noMatchTimeoutRef    = useRef<number | null>(null);
       const target = listenTargetRef.current;
 if (target && recognitionSupported) {
 
-  window.setTimeout(() => {
-
-listen((matched, transcript, confidence) => {
+  listen((matched, transcript, confidence) => {
 
   // stop oude foutmeldingen
   if (noMatchTimeoutRef.current) {
@@ -192,9 +190,7 @@ listen((matched, transcript, confidence) => {
       }, 1600);
   }
 
-}, target);
-
-  }, 250);
+  }, target);
 }
 }
 
@@ -457,6 +453,14 @@ listen((matched, transcript, confidence) => {
               className="font-black text-base text-orange-400" aria-live="polite"
             >
               Probeer het nog eens!
+            </motion.div>
+          )}
+          {!encourage && !noMatch && starting && (
+            <motion.div key="starting-hint"
+              initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
+              className="font-bold text-sm text-cyan-300/80" aria-live="polite"
+            >
+              Microfoon wordt gestart...
             </motion.div>
           )}
           {!encourage && !noMatch && listening && (
