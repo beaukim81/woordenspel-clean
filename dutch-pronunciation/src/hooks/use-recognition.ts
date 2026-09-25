@@ -1,705 +1,167 @@
 import { useCallback, useRef, useState } from "react";
 
+interface SpeechAlternative {
+  transcript: string;
+  confidence?: number;
+}
+
+interface SpeechResult {
+  isFinal?: boolean;
+  length: number;
+  [index: number]: SpeechAlternative;
+}
+
+interface SpeechResultEvent {
+  resultIndex?: number;
+  results: Array<SpeechResult>;
+}
+
 interface SpeechRec {
   lang: string;
   continuous: boolean;
   interimResults: boolean;
   maxAlternatives: number;
-
   onstart: (() => void) | null;
-  onresult: ((e: SpeechResultEvent) => void) | null;
+  onresult: ((event: SpeechResultEvent) => void) | null;
   onerror: (() => void) | null;
   onend: (() => void) | null;
-
   start(): void;
   abort(): void;
   stop(): void;
 }
 
-interface SpeechResultEvent {
-  results: Array<SpeechResultList>;
-}
-
-interface SpeechResultList {
-  isFinal?: boolean;
-  length: number;
-
-  [index: number]: {
-    transcript: string;
-    confidence?: number;
-  };
-}
-
-function levenshtein(
-  a: string,
-  b: string
-): number {
-
-  const m = a.length;
-  const n = b.length;
-
-  const row = Array.from(
-    { length: n + 1 },
-    (_, i) => i
-  );
-
-  for (let i = 1; i <= m; i++) {
-
-    let prev = row[0];
-
-    row[0] = i;
-
-    for (let j = 1; j <= n; j++) {
-
-      const temp = row[j];
-
-      row[j] =
-        a[i - 1] === b[j - 1]
-          ? prev
-          : 1 +
-            Math.min(
-              prev,
-              row[j],
-              row[j - 1]
-            );
-
-      prev = temp;
-    }
-  }
-
-  return row[n];
-}
-
-function normalize(
-  s: string
-): string {
-
-  return s
+function normalize(value: string): string {
+  return value
     .toLowerCase()
     .trim()
     .normalize("NFD")
-    .replace(
-      /[\u0300-\u036f]/g,
-      ""
-    )
-    .replace(
-      /[^a-z0-9]/g,
-      ""
-    );
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/g, "");
 }
 
-export function isGoodEnough(
-  recognized: string,
-  target: string
-): boolean {
+const SPEECH_VARIANTS: Record<string, string[]> = {
+  stop: ["stap", "top", "stok", "stob", "stoppen", "sto"],
+  ster: ["ter", "sterr", "stehr"],
+  steen: ["teen", "stean", "stien"],
+  droom: ["room", "rhoon", "ram", "roam", "droem", "droam"],
+  druif: ["drive", "driv", "live", "ruif", "ruig", "ruit", "druyf", "druijf", "druijff"],
+  draak: ["raak", "raaq", "raac", "rakh", "raaak", "draek", "draeck", "draken", "drague"],
+  draad: ["raad", "draat", "draht"],
+  dragen: ["vragen", "rager", "rage"],
+  drop: ["rob", "drap", "drab", "dropp", "drob"],
+  draven: ["draven", "draaven", "dravin", "dravenn", "drayven", "drayvin"],
+  drum: ["rum", "dram", "dramm", "drumm", "trump"],
+  drank: ["rank", "drunk"],
+  draaien: ["raai", "raaien", "naaien", "ryan", "brian"],
+};
 
-  const t = normalize(target);
-
-  if (!t) {
-    return false;
-  }
-
-  const parts = recognized
-    .split(/\s+/)
-    .map(normalize)
-    .filter(Boolean);
-
-  const candidates = [
-    normalize(recognized),
-    ...parts,
-  ];
-
-  const extraCandidates: string[] = [];
-
-  const isDrWord =
-    t.startsWith("dr");
-
-  const isStWord =
-    t.startsWith("st");
-
-  for (const r of candidates) {
-
-    if (!r) continue;
-
-    if (isStWord) {
-
-      if (
-        [
-          "stap",
-          "top",
-          "stok",
-          "stob",
-          "stoppen",
-          "sto",
-        ].includes(r)
-      ) {
-        extraCandidates.push(
-          "stop"
-        );
-      }
-
-      if (
-        [
-          "ter",
-          "sterr",
-          "stehr",
-        ].includes(r)
-      ) {
-        extraCandidates.push(
-          "ster"
-        );
-      }
-
-      if (
-        [
-          "teen",
-          "stean",
-          "stien",
-        ].includes(r)
-      ) {
-        extraCandidates.push(
-          "steen"
-        );
-      }
-    }
-
-    if (isDrWord) {
-
-      if (
-        r.startsWith("r") &&
-        r.length >= 2
-      ) {
-        extraCandidates.push(
-          "d" + r
-        );
-      }
-
-      if (
-        [
-          "room",
-          "rhoon",
-          "ram",
-          "roam",
-          "droem",
-          "droam",
-        ].includes(r)
-      ) {
-        extraCandidates.push(
-          "droom"
-        );
-      }
-
-      if (
-        [
-          "drive",
-          "driv",
-          "live",
-          "ruif",
-          "ruig",
-          "ruit",
-          "druyf",
-          "druijf",
-          "druijff",
-        ].includes(r)
-      ) {
-        extraCandidates.push(
-          "druif"
-        );
-      }
-
-      if (
-        [
-          "raak",
-          "raaq",
-          "raac",
-          "rakh",
-          "raaak",
-          "draek",
-          "draeck",
-          "draken",
-          "drague",
-        ].includes(r)
-      ) {
-        extraCandidates.push(
-          "draak"
-        );
-      }
-
-      if (
-        [
-          "raad",
-          "draat",
-          "draht",
-        ].includes(r)
-      ) {
-        extraCandidates.push(
-          "draad"
-        );
-      }
-
-      if (
-        [
-          "vragen",
-          "rager",
-          "rage",
-        ].includes(r)
-      ) {
-        extraCandidates.push(
-          "dragen"
-        );
-      }
-
-      if (
-        [
-          "rob",
-          "drap",
-          "drab",
-          "dropp",
-          "drob",
-        ].includes(r)
-      ) {
-        extraCandidates.push(
-          "drop"
-        );
-      }
-
-      if (
-        [
-          "draven",
-          "draaven",
-          "dravin",
-          "dravenn",
-          "drayven",
-          "drayvin",
-        ].includes(r)
-      ) {
-        extraCandidates.push(
-          "draven"
-        );
-      }
-
-      if (
-        [
-          "rum",
-          "dram",
-          "dramm",
-          "drumm",
-          "trump",
-        ].includes(r)
-      ) {
-        extraCandidates.push(
-          "drum"
-        );
-      }
-
-      if (
-        [
-          "rank",
-          "drunk",
-        ].includes(r)
-      ) {
-        extraCandidates.push(
-          "drank"
-        );
-      }
-
-      if (
-        [
-          "raai",
-          "raaien",
-          "naaien",
-          "ryan",
-          "brian",
-        ].includes(r)
-      ) {
-        extraCandidates.push(
-          "draaien"
-        );
-      }
-    }
-  }
-
-  const allCandidates = [
-    ...candidates,
-    ...extraCandidates,
-  ];
-
-  for (const r of allCandidates) {
-
-    if (!r) continue;
-
-    if (r === t) {
-      return true;
-    }
-
-    if (
-      t === "stop" &&
-      (
-        r === "stop" ||
-        r === "stap" ||
-        r === "top" ||
-        r.startsWith("sto")
-      )
-    ) {
-      return true;
-    }
-
-    if (
-      t === "draven" &&
-      (
-        r === "draven" ||
-        r.startsWith("drav") ||
-        r.startsWith("dra")
-      )
-    ) {
-      return true;
-    }
-
-    if (
-      t === "drum" &&
-      (
-        r === "rum" ||
-        r.startsWith("dru") ||
-        r.startsWith("dra")
-      )
-    ) {
-      return true;
-    }
-
-    if (
-      t === "draad" &&
-      (
-        r === "raad" ||
-        r.startsWith("dra")
-      )
-    ) {
-      return true;
-    }
-
-    if (
-      t === "draak" &&
-      (
-        r === "raak" ||
-        r.startsWith("dra")
-      )
-    ) {
-      return true;
-    }
-
-    if (
-      r.length >= 4 &&
-      (
-        r.includes(t) ||
-        t.includes(r)
-      )
-    ) {
-      return true;
-    }
-
-    const prefix = t.slice(
-      0,
-      Math.max(
-        2,
-        Math.floor(
-          t.length * 0.6
-        )
-      )
-    );
-
-    if (
-      t.length >= 4 &&
-      r.startsWith(prefix)
-    ) {
-      return true;
-    }
-
-    let maxDist = 1;
-
-    if (t.length >= 6) {
-      maxDist = 2;
-    }
-
-    if (
-      t.startsWith("dr") ||
-      t.startsWith("st")
-    ) {
-      maxDist += 1;
-    }
-
-    if (
-      levenshtein(r, t) <=
-      maxDist
-    ) {
-      return true;
-    }
-  }
-
-  return false;
+export function isGoodEnough(recognized: string, target: string): boolean {
+  const heard = normalize(recognized);
+  const expected = normalize(target);
+  if (!heard || !expected) return false;
+  return heard === expected || (SPEECH_VARIANTS[expected] ?? []).some((variant) => normalize(variant) === heard);
 }
 
-function getSpeechRecognitionClass():
-  | (new () => SpeechRec)
-  | null {
-
-  if (
-    typeof window === "undefined"
-  ) {
-    return null;
-  }
-
-  const w =
-    window as unknown as Record<
-      string,
-      unknown
-    >;
-
-  return (
-    (w["SpeechRecognition"] ??
-      w[
-        "webkitSpeechRecognition"
-      ] ??
-      null) as new () => SpeechRec
-  );
+function getSpeechRecognitionClass(): (new () => SpeechRec) | null {
+  if (typeof window === "undefined") return null;
+  const browser = window as unknown as Record<string, unknown>;
+  return (browser["SpeechRecognition"] ?? browser["webkitSpeechRecognition"] ?? null) as
+    | (new () => SpeechRec)
+    | null;
 }
 
-type OnResult = (
-  matched: boolean,
-  transcript: string,
-  confidence: number
-) => void;
+type OnResult = (matched: boolean, transcript: string, confidence: number) => void;
+
+interface LastResult {
+  transcript: string;
+  confidence: number;
+  matched: boolean;
+}
 
 export function useRecognition() {
+  const [listening, setListening] = useState(false);
+  const [lastResult, setLastResult] = useState<LastResult | null>(null);
+  const listeningRef = useRef(false);
+  const recRef = useRef<SpeechRec | null>(null);
+  const supported = !!getSpeechRecognitionClass();
 
-  const [listening, setListening] =
-    useState(false);
-
-  const listeningRef =
-    useRef(false);
-
-  const recRef =
-    useRef<SpeechRec | null>(
-      null
-    );
-
-  const supported =
-    !!getSpeechRecognitionClass();
-
-  const listen = useCallback(
-    (
-      onResult: OnResult,
-      targetWord: string
-    ) => {
-
-      const SR =
-        getSpeechRecognitionClass();
-
-      if (
-        !SR ||
-        listeningRef.current
-      ) {
-        return;
-      }
-
-      recRef.current?.abort();
-
-      const rec = new SR();
-
-      recRef.current = rec;
-
-      rec.lang = "nl-NL";
-      rec.continuous = true;
-      rec.interimResults = true;
-      rec.maxAlternatives = 15;
-
-      rec.onstart = () => {
-
-        listeningRef.current =
-          true;
-
-        setListening(true);
-      };
-
-      let resultFired = false;
-
-      rec.onresult = (
-        e: SpeechResultEvent
-      ) => {
-
-        const transcripts: {
-          text: string;
-          confidence: number;
-        }[] = [];
-
-        for (
-          let ri = 0;
-          ri < e.results.length;
-          ri++
-        ) {
-
-          const result =
-            e.results[ri];
-
-          for (
-            let ai = 0;
-            ai < result.length;
-            ai++
-          ) {
-
-            const alternative =
-              result[ai];
-
-            const cleaned =
-              alternative
-                .transcript
-                .trim();
-
-            const confidence =
-              typeof alternative.confidence ===
-              "number"
-                ? alternative.confidence
-                : 0;
-
-            if (
-              cleaned.length > 0
-            ) {
-
-              const transcriptParts = [
-                cleaned,
-                ...cleaned.split(/\s+/),
-              ];
-
-              for (const part of transcriptParts) {
-
-                const word =
-                  part.trim();
-
-                if (word) {
-
-                  transcripts.push({
-                    text: word,
-                    confidence,
-                  });
-                }
-              }
-            }
-          }
-        }
-
-        console.log(
-          "TARGET:",
-          targetWord
-        );
-
-        console.log(
-          "TRANSCRIPTS:",
-          transcripts
-        );
-
-        for (const item of transcripts) {
-
-          const t =
-            item.text;
-
-          const confidence =
-            item.confidence;
-
-          if (
-            isGoodEnough(
-              t,
-              targetWord
-            )
-          ) {
-
-            resultFired = true;
-
-            listeningRef.current =
-              false;
-
-            setListening(false);
-
-            rec.stop();
-
-            onResult(
-              true,
-              t,
-              confidence
-            );
-
-            return;
-          }
-        }
-      };
-
-      rec.onerror = () => {
-
-        resultFired = true;
-
-        listeningRef.current =
-          false;
-
-        setListening(false);
-
-        onResult(
-          false,
-          "",
-          0
-        );
-      };
-
-      rec.onend = () => {
-
-        listeningRef.current =
-          false;
-
-        setListening(false);
-
-        if (!resultFired) {
-
-          setTimeout(() => {
-
-            if (resultFired) {
-              return;
-            }
-
-            onResult(
-              false,
-              "",
-              0
-            );
-
-          }, 700);
-        }
-      };
-
-      try {
-
-        rec.start();
-
-      } catch {
-
-        listeningRef.current =
-          false;
-
-        setListening(false);
-      }
-    },
-    []
-  );
-
-  const cancel = useCallback(() => {
+  const listen = useCallback((onResult: OnResult, targetWord: string) => {
+    const Recognition = getSpeechRecognitionClass();
+    if (!Recognition || listeningRef.current) return;
 
     recRef.current?.abort();
+    const rec = new Recognition();
+    recRef.current = rec;
+    rec.lang = "nl-NL";
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.maxAlternatives = 15;
 
-    listeningRef.current = false;
+    let resultFired = false;
+    setLastResult(null);
 
-    setListening(false);
+    rec.onstart = () => {
+      listeningRef.current = true;
+      setListening(true);
+    };
 
+    rec.onresult = (event) => {
+      const startIndex = event.resultIndex ?? 0;
+      for (let resultIndex = startIndex; resultIndex < event.results.length; resultIndex++) {
+        const result = event.results[resultIndex];
+        if (!result.isFinal) continue;
+
+        for (let alternativeIndex = 0; alternativeIndex < result.length; alternativeIndex++) {
+          const alternative = result[alternativeIndex];
+          const transcript = alternative.transcript.trim();
+          if (!transcript) continue;
+
+          const confidence = typeof alternative.confidence === "number" ? alternative.confidence : 0;
+          const matched = isGoodEnough(transcript, targetWord);
+          setLastResult({ transcript, confidence, matched });
+
+          if (!matched) continue;
+
+          resultFired = true;
+          listeningRef.current = false;
+          setListening(false);
+          rec.stop();
+          onResult(true, transcript, confidence);
+          return;
+        }
+      }
+    };
+
+    rec.onerror = () => {
+      resultFired = true;
+      listeningRef.current = false;
+      setListening(false);
+      onResult(false, "", 0);
+    };
+
+    rec.onend = () => {
+      listeningRef.current = false;
+      setListening(false);
+      if (!resultFired) {
+        window.setTimeout(() => {
+          if (!resultFired) onResult(false, "", 0);
+        }, 700);
+      }
+    };
+
+    try {
+      rec.start();
+    } catch {
+      listeningRef.current = false;
+      setListening(false);
+    }
   }, []);
 
-  return {
-    listen,
-    cancel,
-    listening,
-    supported,
-  };
+  const cancel = useCallback(() => {
+    recRef.current?.abort();
+    listeningRef.current = false;
+    setListening(false);
+  }, []);
+
+  return { listen, cancel, listening, supported, lastResult };
 }
