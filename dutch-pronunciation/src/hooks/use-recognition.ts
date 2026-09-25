@@ -40,6 +40,8 @@ function normalize(value: string): string {
 }
 
 const SPEECH_VARIANTS: Record<string, string[]> = {
+  twee: ["2"],
+  drie: ["3"],
   stop: ["stap", "top", "stok", "stob", "stoppen", "sto"],
   ster: ["ter", "sterr", "stehr"],
   steen: ["teen", "stean", "stien"],
