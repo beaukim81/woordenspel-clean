@@ -56,10 +56,12 @@ const SPEECH_VARIANTS: Record<string, string[]> = {
 };
 
 export function isGoodEnough(recognized: string, target: string): boolean {
-  const heard = normalize(recognized);
   const expected = normalize(target);
-  if (!heard || !expected) return false;
-  return heard === expected || (SPEECH_VARIANTS[expected] ?? []).some((variant) => normalize(variant) === heard);
+  if (!expected) return false;
+
+  const heardWords = recognized.split(/\s+/).map(normalize).filter(Boolean);
+  const allowed = [expected, ...(SPEECH_VARIANTS[expected] ?? []).map(normalize)];
+  return heardWords.some((heard) => allowed.includes(heard));
 }
 
 function getSpeechRecognitionClass(): (new () => SpeechRec) | null {
