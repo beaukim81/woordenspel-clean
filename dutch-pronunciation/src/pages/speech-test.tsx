@@ -33,6 +33,10 @@ export default function SpeechTest() {
     }, target);
   }
 
+  const renderOption = (word: (typeof words)[number]) => (
+    <option key={word.word} value={word.word}>{word.cluster.toUpperCase()} - {word.word}</option>
+  );
+
   return (
     <main className="min-h-screen min-h-[100dvh] bg-background text-white px-5 py-6">
       <div className="mx-auto w-full max-w-lg">
@@ -59,11 +63,12 @@ export default function SpeechTest() {
           disabled={listening}
           className="mt-2 w-full rounded-lg border border-white/20 bg-white/10 px-4 py-3 text-lg"
         >
-          {words.map((word) => (
-            <option key={word.word} value={word.word}>
-              {word.cluster === "test" ? "TEST (niet in spel)" : word.cluster.toUpperCase()} - {word.word}
-            </option>
-          ))}
+          <optgroup label="Testwoorden (niet in spel)">
+            {words.filter((word) => word.cluster === "test").map(renderOption)}
+          </optgroup>
+          <optgroup label="Spelwoorden">
+            {words.filter((word) => word.cluster !== "test").map(renderOption)}
+          </optgroup>
         </select>
 
         <button
