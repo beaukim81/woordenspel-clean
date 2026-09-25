@@ -4,11 +4,6 @@ import { useLocation } from "wouter";
 import { useRecognition } from "@/hooks/use-recognition";
 import { PRELOADED_WORDS, customWordToWordData, useGameStore } from "@/lib/store";
 
-const DIAGNOSTIC_WORDS = [
-  { word: "twee", emoji: "", cluster: "test" },
-  { word: "drie", emoji: "", cluster: "test" },
-];
-
 export default function SpeechTest() {
   const [, setLocation] = useLocation();
   const customWords = useGameStore((state) => state.customWords);
@@ -22,7 +17,7 @@ export default function SpeechTest() {
       return data ? [data] : [];
     });
     return Array.from(
-      new Map([...PRELOADED_WORDS, ...custom, ...DIAGNOSTIC_WORDS].map((word) => [word.word, word])).values()
+      new Map([...PRELOADED_WORDS, ...custom].map((word) => [word.word, word])).values()
     );
   }, [customWords]);
 
@@ -32,10 +27,6 @@ export default function SpeechTest() {
       setOutcome(matched ? "De matchregel vond het doelwoord." : "Luisteren gestopt zonder match.");
     }, target);
   }
-
-  const renderOption = (word: (typeof words)[number]) => (
-    <option key={word.word} value={word.word}>{word.cluster.toUpperCase()} - {word.word}</option>
-  );
 
   return (
     <main className="min-h-screen min-h-[100dvh] bg-background text-white px-5 py-6">
@@ -50,7 +41,7 @@ export default function SpeechTest() {
         </button>
 
         <h1 className="text-2xl font-bold">Spraaktest</h1>
-        <p className="mt-2 text-sm text-white/65">Test de woorden uit het spel. Twee en drie zijn alleen toegevoegd als testwoorden, niet als spelwoorden.</p>
+        <p className="mt-2 text-sm text-white/65">Test de woorden uit het spel. Deze test start geen spelronde en geeft geen coins of XP.</p>
 
         <label className="mt-8 block text-sm font-semibold" htmlFor="speech-test-target">Te testen woord</label>
         <select
@@ -63,12 +54,9 @@ export default function SpeechTest() {
           disabled={listening}
           className="mt-2 w-full rounded-lg border border-white/20 bg-white/10 px-4 py-3 text-lg"
         >
-          <optgroup label="Testwoorden (niet in spel)">
-            {words.filter((word) => word.cluster === "test").map(renderOption)}
-          </optgroup>
-          <optgroup label="Spelwoorden">
-            {words.filter((word) => word.cluster !== "test").map(renderOption)}
-          </optgroup>
+          {words.map((word) => (
+            <option key={word.word} value={word.word}>{word.cluster.toUpperCase()} - {word.word}</option>
+          ))}
         </select>
 
         <button
