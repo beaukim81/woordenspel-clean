@@ -12,7 +12,7 @@ export default function SpeechTest() {
   function startTest() {
     setOutcome(null);
     listen((matched) => {
-      setOutcome(matched ? "Automatisch goedgekeurd" : "Geen automatische match");
+      setOutcome(matched ? "De matchregel vond het doelwoord." : "Luisteren gestopt zonder match.");
     }, target);
   }
 
@@ -59,12 +59,13 @@ export default function SpeechTest() {
               <dt className="text-white/60">Herkenning</dt><dd className="break-all font-semibold">{lastResult.transcript}</dd>
               <dt className="text-white/60">Doelwoord</dt><dd>{target}</dd>
               <dt className="text-white/60">Confidence</dt><dd>{lastResult.confidence.toFixed(2)}</dd>
-              <dt className="text-white/60">Matchregel</dt><dd>{lastResult.matched ? "Goedgekeurd" : "Afgekeurd"}</dd>
+              <dt className="text-white/60">Matchregel</dt><dd>{lastResult.matched ? "Match" : "Geen match"}</dd>
             </dl>
           ) : (
             <p className="mt-3 text-sm text-white/55">Nog geen spraakresultaat.</p>
           )}
-          {outcome && <p className="mt-4 font-semibold">{outcome}</p>}
+          <p className="mt-4 text-xs text-white/55">De match is alleen de tekstvergelijking. In het spel kan een lage confidence alsnog om een nieuwe poging vragen.</p>
+          {outcome && <p className="mt-3 font-semibold">{outcome}</p>}
         </section>
       </div>
     </main>
